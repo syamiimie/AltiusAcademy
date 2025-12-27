@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Altius Academy | Staff Homepage</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
+
+    <div class="user-icon">👤</div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+<div class="dashboard">
+
+    <!-- LEFT COLUMN -->
+    <div class="column">
+
+        <div class="section-title">👩‍💻 Profile Overview</div>
+
+        <div class="card profile-card">
+            <div class="avatar">👩‍💻</div>
+
+            <h2>Staff Profile</h2>
+
+            <p class="name" id="staffName">-</p>
+            <p class="email" id="staffEmail">-</p>
+            <p class="phone" id="staffPhone">-</p>
+
+            <a href="StaffEdit.html" class="btn">Edit Profile</a>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="column">
+
+        <div class="section-title">📊 Academy Statistics</div>
+
+        <div class="stats-column">
+            <div class="card">
+                <h3>🎓 Student Statistics</h3>
+                <p>Total Students: <span>--</span></p>
+                <p>Highest Enrollment Grade: <span>--</span></p>
+                <p>Average Attendance Rate: <span>--</span></p>
+            </div>
+
+            <div class="card">
+                <h3>👩‍🏫 Teacher Statistics</h3>
+                <p>Total Active Teachers: <span>--</span></p>
+                <p>Average Students per Teacher: <span>--</span></p>
+                <p>Highest Passing Rate: <span>--</span></p>
+            </div>
+        </div>
+    </div>
+
+</div>
+</main>
+
+<!-- 🔥 SCRIPT -->
+<script>
+const staff = JSON.parse(localStorage.getItem("staff"));
+
+if (!staff) {
+    alert("Please login first");
+    window.location.href = "login.html";
+}
+
+document.getElementById("staffName").innerText = staff.STAFF_NAME;
+document.getElementById("staffEmail").innerText = staff.STAFF_EMAIL;
+document.getElementById("staffPhone").innerText = staff.STAFF_PHONENUM;
+</script>
+
+</body>
+</html>

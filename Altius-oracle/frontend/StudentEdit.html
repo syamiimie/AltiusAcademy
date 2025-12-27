@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Edit Student</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<form id="editForm" class="form">
+<h3>Edit Student</h3>
+
+<input id="student_name">
+<input id="student_ic">
+<input id="student_address">
+<input id="student_email">
+<input id="student_phone">
+
+<select id="student_type">
+  <option value="Primary">Primary</option>
+  <option value="Secondary">Secondary</option>
+</select>
+
+<button class="button">Update</button>
+</form>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+fetch(`http://localhost:3000/students/${id}`)
+.then(r => r.json())
+.then(s => {
+  document.getElementById("student_name").value = s.STUDENT_NAME || "";
+  document.getElementById("student_ic").value = s.STUDENT_IC || "";
+  document.getElementById("student_address").value = s.STUDENT_ADDRESS || "";
+  document.getElementById("student_email").value = s.STUDENT_EMAIL || "";
+  document.getElementById("student_phone").value = s.STUDENT_PHONENUM || "";
+  document.getElementById("student_type").value = s.STUDENT_TYPE || "Primary";
+});
+
+document.getElementById("editForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  await fetch(`http://localhost:3000/students/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: document.getElementById("student_name").value.trim(),
+      ic: document.getElementById("student_ic").value.trim(),
+      address: document.getElementById("student_address").value.trim(),
+      email: document.getElementById("student_email").value.trim(),
+      phone: document.getElementById("student_phone").value.trim(),
+      type: document.getElementById("student_type").value
+    })
+  });
+
+  location.href = "StudentList.html";
+});
+</script>
+
+</body>
+</html>

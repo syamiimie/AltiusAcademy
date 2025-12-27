@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Student</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<form id="addForm" class="form">
+<h3>Add Student</h3>
+
+<input id="student_name" placeholder="Name" required>
+<input id="student_ic" placeholder="IC">
+<input id="student_address" placeholder="Address">
+<input id="student_email" placeholder="Email">
+<input id="student_phone" placeholder="Phone">
+
+<select id="student_type">
+  <option value="Primary">Primary</option>
+  <option value="Secondary">Secondary</option>
+</select>
+
+<button class="button">Save</button>
+</form>
+
+<script>
+document.getElementById("addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const payload = {
+    name: document.getElementById("student_name").value.trim(),
+    ic: document.getElementById("student_ic").value.trim(),
+    address: document.getElementById("student_address").value.trim(),
+    email: document.getElementById("student_email").value.trim(),
+    phone: document.getElementById("student_phone").value.trim(),
+    type: document.getElementById("student_type").value
+  };
+
+  console.log("SEND =", payload);
+
+  await fetch("http://localhost:3000/students", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  location.href = "StudentList.html";
+});
+</script>
+
+</body>
+</html>

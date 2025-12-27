@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Students List</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="content">
+<table class="section">
+<thead>
+<tr>
+  <th colspan="8">Students List</th>
+  <th><a href="StudentAdd.html" class="button">Add</a></th>
+</tr>
+<tr>
+  <th>ID</th><th>Name</th><th>IC</th><th>Address</th>
+  <th>Email</th><th>Phone</th><th>Type</th><th>Action</th>
+</tr>
+</thead>
+<tbody id="studentTable"></tbody>
+</table>
+</main>
+
+<script>
+fetch("http://localhost:3000/students")
+.then(r => r.json())
+.then(data => {
+  const t = document.getElementById("studentTable");
+  data.forEach(s => {
+    t.innerHTML += `
+    <tr>
+      <td>${s.STUDENT_ID}</td>
+      <td>${s.STUDENT_NAME}</td>
+      <td>${s.STUDENT_IC ?? "-"}</td>
+      <td>${s.STUDENT_ADDRESS ?? "-"}</td>
+      <td>${s.STUDENT_EMAIL ?? "-"}</td>
+      <td>${s.STUDENT_PHONENUM ?? "-"}</td>
+      <td>${s.STUDENT_TYPE}</td>
+      <td>
+        <a class="button" href="StudentEdit.html?id=${s.STUDENT_ID}">Edit</a>
+        <button class="button" onclick="del(${s.STUDENT_ID})">Delete</button>
+      </td>
+    </tr>`;
+  });
+});
+
+function del(id){
+  if(confirm("Delete student?")){
+    fetch(`http://localhost:3000/students/${id}`, { method:"DELETE" })
+    .then(()=>location.reload());
+  }
+}
+</script>
+
+</body>
+</html>

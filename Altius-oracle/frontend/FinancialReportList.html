@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Financial Report | Altius Academy</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+    @media print {
+        body * {
+            visibility: hidden; /* sembunyikan semua */
+        }
+
+        .financial-report, .financial-report * {
+            visibility: visible; /* hanya report yg nampak */
+        }
+
+        .financial-report {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        .print-btn {
+            display: none;
+        }
+    }
+    </style>
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
+
+    <div class="user-icon">👤</div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content financial-report">
+
+    <!-- PAGE TITLE -->
+    <div class="page-title">Financial Report</div>
+
+    <!-- FILTER FORM -->
+    <div class="form">
+        <form method="GET" style="text-align:center;">
+            <label>Report Period:</label>
+            <input type="month" name="month">
+            <button class="button">Generate</button>
+            <a href="FinancialReportPDFServlet" onclick="window.print()" class="button print-btn">Print</a>
+        </form>
+    </div>
+
+    <!-- SUMMARY CARDS AT TOP -->
+    <div class="package-grid" style="margin-bottom: 30px;">
+        <div class="package-card">
+            <div class="package-title">Total Revenue</div>
+            <p>RM 12,500</p>
+        </div>
+        <div class="package-card">
+            <div class="package-title">Total Collected</div>
+            <p>RM 10,800</p>
+        </div>
+        <div class="package-card">
+            <div class="package-title">Outstanding Fees</div>
+            <p>RM 1,700</p>
+        </div>
+        <div class="package-card">
+            <div class="package-title">Total Enrollment</div>
+            <p>85</p>
+        </div>
+    </div>
+
+    <!-- DETAIL TABLE -->
+    <div class="section">
+        <div class="table-title">Payment Details</div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Package</th>
+                    <th>Total Fee</th>
+                    <th>Paid</th>
+                    <th>Outstanding</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ahmad Ali</td>
+                    <td>Science Package</td>
+                    <td>RM 300</td>
+                    <td>RM 200</td>
+                    <td>RM 100</td>
+                </tr>
+                <tr>
+                    <td>Siti Aminah</td>
+                    <td>Math Package</td>
+                    <td>RM 250</td>
+                    <td>RM 250</td>
+                    <td>RM 0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+</body>
+</html>

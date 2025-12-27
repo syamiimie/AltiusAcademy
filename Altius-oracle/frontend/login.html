@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Staff Login | Altius Academy</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #6a5acd, #b19cd9);
+      font-family: Arial;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 30px;
+      width: 350px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.2);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      background: #6a5acd;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <h2>Altius Academy</h2>
+  <p>Staff Login</p>
+
+  <form id="loginForm">
+    <input id="username" placeholder="Username" required>
+    <input id="password" type="password" placeholder="Password" required>
+    <button>Login</button>
+  </form>
+</div>
+
+<script>
+document.getElementById("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const res = await fetch("http://localhost:3000/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: username.value,
+      password: password.value
+    })
+  });
+
+  if (!res.ok) {
+    alert("Invalid username or password");
+    return;
+  }
+
+  const data = await res.json();
+
+  localStorage.setItem("staff", JSON.stringify(data.staff));
+
+  window.location.href = "StaffHomepage.html";
+});
+</script>
+
+</body>
+</html>
