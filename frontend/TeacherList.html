@@ -9,186 +9,83 @@
 
 <body>
 
-    <!-- HEADER -->
-    <header class="top-bar">
-        <div class="logo">
-            <a href="StaffHomepage.html">
-                <img src="images/logo1.png" alt="Altius Academy" >        
-            </a>
-        </div>
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">        
+        </a>
+    </div>
 
-        <nav class="nav-menu">
-            <a href="TeacherList.html">Teacher</a>
-            <a href="StudentList.html">Student</a>
-            <a href="ClassList.html">Class</a>
-            <a href="PackageList.html">Package</a>
-            <a href="report.html">Report</a>
-        </nav>
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
 
-        <div class="user-icon">
-            <span>👤</span>
-        </div>
-    </header>
+    <div class="user-icon">👤</div>
+</header>
 
-    <!-- MAIN CONTENT -->
-    <main class="content">
-        <!-- PAGE CONTENT GOES HERE -->
-        <table border="1" class="section">
-            <tr>
-                <td class="title" colspan="6">Teachers List</td>
-                <td class="action-cell"><a href="TeacherAdd.html" class="button">Add</a></td>
-            </tr>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>IC</th>
-                <th>Email</th>
-                <th>Phone Number</th>
-                <th>Address</th>
-                <th>Action</th>
-            </tr>
-            <tr>
-                <td>1</td>
-                <td>Lim Jia Yi</td>
-                <td>990101-14-5679</td>
-                <td>jiayi991@gmail.com</td>
-                <td>0123456789</td>
-                <td>No. 12, Jalan Harmoni 3, Taman Seri Maju, 43000 Kajang Selangor</td>
-                <td class="action-cell">
-                    <a href="TeacherEdit.html" class="button">Edit</a>
-<!--                    used for further development later
-                    <a href="TeacherEditServlet?Teacher_ID=1" class="button">Edit</a>-->
+<main class="content">
+<table border="1" class="section">
+<thead>
+<tr>
+    <td class="title" colspan="6">Teachers List</td>
+    <td class="action-cell">
+        <a href="TeacherAdd.html" class="button">Add</a>
+    </td>
+</tr>
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>IC</th>
+    <th>Email</th>
+    <th>Phone Number</th>
+    <th>Address</th>
+    <th>Action</th>
+</tr>
+</thead>
 
-                    <form action="TeacherDeleteServlet" method="post"
-                          onsubmit="return confirm('Delete this teacher?');"
-                          style="display:inline;">
-                        <input type="hidden" name="Teacher_ID" value="1">
-                        <button type="submit" class="button">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td class="action-cell">
-                    <a href="TeacherEdit.html" class="button">Edit</a>
-<!--                    used for further development later
-                    <a href="TeacherEditServlet?Teacher_ID=2" class="button">Edit</a>-->
+<tbody id="teacherTable">
+<!-- DATA DARI ORACLE -->
+</tbody>
+</table>
+</main>
 
-                    <form action="TeacherDeleteServlet" method="post"
-                          onsubmit="return confirm('Delete this teacher?');"
-                          style="display:inline;">
-                        <input type="hidden" name="Teacher_ID" value="2">
-                        <button type="submit" class="button">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td>3</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td class="action-cell">
-                    <a href="TeacherEdit.html" class="button">Edit</a>
-<!--                    used for further development later
-                    <a href="TeacherEditServlet?Teacher_ID=3" class="button">Edit</a>-->
+<script>
+fetch("http://localhost:3000/teachers")
+.then(res => res.json())
+.then(data => {
+    const table = document.getElementById("teacherTable");
+    table.innerHTML = "";
 
-                    <form action="TeacherDeleteServlet" method="post"
-                          onsubmit="return confirm('Delete this teacher?');"
-                          style="display:inline;">
-                        <input type="hidden" name="Teacher_ID" value="3">
-                        <button type="submit" class="button">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td>4</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td class="action-cell">
-                    <a href="TeacherEdit.html" class="button">Edit</a>
-<!--                    used for further development later
-                    <a href="TeacherEditServlet?Teacher_ID=4" class="button">Edit</a>-->
+    data.forEach(t => {
+        table.innerHTML += `
+        <tr>
+            <td>${t.TEACHER_ID}</td>
+            <td>${t.TEACHER_NAME}</td>
+            <td>${t.TEACHER_IC ?? "-"}</td>
+            <td>${t.TEACHER_EMAIL ?? "-"}</td>
+            <td>${t.TEACHER_PHONENUM ?? "-"}</td>
+            <td>${t.TEACHER_ADDRESS ?? "-"}</td>
+            <td class="action-cell">
+                <a href="TeacherEdit.html?id=${t.TEACHER_ID}" class="button">Edit</a>
+                <button class="button" onclick="del(${t.TEACHER_ID})">Delete</button>
+            </td>
+        </tr>
+        `;
+    });
+});
 
-                    <form action="TeacherDeleteServlet" method="post"
-                          onsubmit="return confirm('Delete this teacher?');"
-                          style="display:inline;">
-                        <input type="hidden" name="Teacher_ID" value="4">
-                        <button type="submit" class="button">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td>5</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td class="action-cell">
-                    <a href="TeacherEdit.html" class="button">Edit</a>
-<!--                    used for further development later
-                    <a href="TeacherEditServlet?Teacher_ID=5" class="button">Edit</a>-->
+function del(id){
+    if(confirm("Delete this teacher?")){
+        fetch(`http://localhost:3000/teachers/${id}`, {
+            method: "DELETE"
+        }).then(() => location.reload());
+    }
+}
+</script>
 
-                    <form action="TeacherDeleteServlet" method="post"
-                          onsubmit="return confirm('Delete this teacher?');"
-                          style="display:inline;">
-                        <input type="hidden" name="Teacher_ID" value="5">
-                        <button type="submit" class="button">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td>6</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td class="action-cell">
-                    <a href="TeacherEdit.html" class="button">Edit</a>
-<!--                    used for further development later
-                    <a href="TeacherEditServlet?Teacher_ID=6" class="button">Edit</a>-->
-
-                    <form action="TeacherDeleteServlet" method="post"
-                          onsubmit="return confirm('Delete this teacher?');"
-                          style="display:inline;">
-                        <input type="hidden" name="Teacher_ID" value="6">
-                        <button type="submit" class="button">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td>7</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td>----------</td>
-                <td class="action-cell">
-                    <a href="TeacherEdit.html" class="button">Edit</a>
-<!--                    used for further development later
-                    <a href="TeacherEditServlet?Teacher_ID=7" class="button">Edit</a>-->
-
-                    <form action="TeacherDeleteServlet" method="post"
-                          onsubmit="return confirm('Delete this teacher?');"
-                          style="display:inline;">
-                        <input type="hidden" name="Teacher_ID" value="7">
-                        <button type="submit" class="button">Delete</button>
-                    </form>
-                </td>
-            </tr>   
-        </table>
-    </main>
 </body>
 </html>
-

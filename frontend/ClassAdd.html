@@ -9,63 +9,88 @@
 
 <body>
 
-    <!-- HEADER -->
-    <header class="top-bar">
-        <div class="logo">
-            <a href="StaffHomepage.html">
-                <img src="images/logo1.png" alt="Altius Academy" >        
-            </a>
-        </div>
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
 
-        <nav class="nav-menu">
-            <a href="TeacherList.html">Teacher</a>
-            <a href="StudentList.html">Student</a>
-            <a href="ClassList.html">Class</a>
-            <a href="PackageList.html">Package</a>
-            <a href="report.html">Report</a>
-        </nav>
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
 
-        <div class="user-icon">
-            <span>👤</span>
-        </div>
-    </header>
+    <div class="user-icon">👤</div>
+</header>
 
-    <!-- MAIN CONTENT -->
-    <main class="content">
-        <!-- PAGE CONTENT GOES HERE --> 
-       <form action="#" method="post">
-            <table class="form">
-                <tr>
-                    <td class="avatar" style="text-align: center;" colspan="2">🏫</td>
-                </tr>
-                <tr>
-                    <td class="title" colspan="2">Add New Class</td>
-                </tr>
-                <tr>
-                    <td>Name:</td>
-                    <td><input type="text" id="Class_Name" name="Class_Name" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Time:</td>
-                    <td><input type="number" id="Class_Time" name="Class_Time" placeholder="(Example: 10:00)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Day:</td>
-                    <td><input type="text" id="Class_Day" name="Class_Day" placeholder="(Example: Monday)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Subjects:</td>
-                    <td><input type="text" id="Class_Subjects" name="Class_Subjects" placeholder="(Separate with comma)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Teachers:</td>
-                    <td><input type="text" id="Class_Teacher" name="Class_Teacher"  style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="text-align:center;"><input type="submit" class="button" value="Save"></td>
-                </tr>
-            </table>
-        </form>
-    </main>
+<main class="content">
+<form id="classForm">
+<table class="form">
+<tr>
+    <td class="avatar" colspan="2" style="text-align:center;">🏫</td>
+</tr>
+<tr>
+    <td class="title" colspan="2">Add New Class</td>
+</tr>
+
+<tr>
+    <td>Name:</td>
+    <td><input id="Class_Name" required></td>
+</tr>
+
+<tr>
+    <td>Time:</td>
+    <td><input id="Class_Time" required></td>
+</tr>
+
+<tr>
+    <td>Day:</td>
+    <td><input id="Class_Day" required></td>
+</tr>
+
+<tr>
+    <td>Subject ID:</td>
+    <td><input id="Class_Subjects" required></td>
+</tr>
+
+<tr>
+    <td>Teacher ID:</td>
+    <td><input id="Class_Teacher" required></td>
+</tr>
+
+<tr>
+    <td colspan="2" style="text-align:center;">
+        <button class="button">Save</button>
+    </td>
+</tr>
+</table>
+</form>
+</main>
+
+<script>
+document.getElementById("classForm").onsubmit = e => {
+    e.preventDefault();
+
+    fetch("http://localhost:3000/classes",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+            name: Class_Name.value.trim(),
+            time: Class_Time.value.trim(),
+            day: Class_Day.value.trim(),
+            subject_id: Class_Subjects.value.trim(),
+            teacher_id: Class_Teacher.value.trim()
+        })
+    }).then(()=>{
+        alert("Class added");
+        location.href="ClassList.html";
+    });
+};
+</script>
+
 </body>
 </html>

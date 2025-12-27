@@ -8,60 +8,74 @@
 </head>
 
 <body>
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
 
-    <!-- HEADER -->
-    <header class="top-bar">
-        <div class="logo">
-            <a href="StaffHomepage.html">
-                <img src="images/logo1.png" alt="Altius Academy" >        
-            </a>
-        </div>
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
 
-        <nav class="nav-menu">
-            <a href="TeacherList.html">Teacher</a>
-            <a href="StudentList.html">Student</a>
-            <a href="ClassList.html">Class</a>
-            <a href="PackageList.html">Package</a>
-            <a href="report.html">Report</a>
-        </nav>
+    <div class="user-icon">👤</div>
+</header>
 
-        <div class="user-icon">
-            <span>👤</span>
-        </div>
-    </header>
+<main class="content">
+<form>
+<table class="form">
+<tr><td class="avatar" colspan="2" style="text-align:center;">🗂</td></tr>
+<tr><td class="title" colspan="2">Edit Package Details</td></tr>
 
-    <!-- MAIN CONTENT -->
-    <main class="content">
-        <!-- PAGE CONTENT GOES HERE --> 
-       <form action="#" method="post">
-            <table class="form">
-                <tr>
-                    <td class="avatar" style="text-align: center;" colspan="2">🗂</td>
-                </tr>
-                <tr>
-                    <td class="title" colspan="2">Edit Package Details</td>
-                </tr>
-                <tr>
-                    <td>Name:</td>
-                    <td><input type="text" id="Package_Name" name="Package_Name" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Fee: </td>
-                    <td><input type="number" id="Package_Fee" name="Package_Fee" placeholder="(Example: 150.00)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Duration:</td>
-                    <td><input type="text" id="Package_Duration" name="Package_Duration" placeholder="(Example: 5 hours)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Subjects: </td>
-                    <td><input type="text" id="Package_Username" name="Package_Subjects" placeholder="(Separate with comma)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="text-align:center;"><input type="submit" class="button" value="Save"></td>
-                </tr>
-            </table>
-        </form>
-    </main>
+<tr><td>Name:</td><td><input id="Package_Name"></td></tr>
+<tr><td>Fee:</td><td><input type="number" id="Package_Fee"></td></tr>
+<tr><td>Duration:</td><td><input id="Duration"></td></tr>
+<tr><td>Subjects:</td><td><input id="Subjects"></td></tr>
+
+<tr>
+<td colspan="2" style="text-align:center;">
+<button class="button">Save</button>
+</td>
+</tr>
+</table>
+</form>
+</main>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+fetch(`http://localhost:3000/packages/${id}`)
+.then(r=>r.json())
+.then(p=>{
+    Package_Name.value = p.PACKAGE_NAME || "";
+    Package_Fee.value = p.PACKAGE_FEE || "";
+    Duration.value = p.DURATION || "";
+    Subjects.value = p.SUBJECTS || "";
+});
+
+document.querySelector("form").addEventListener("submit", e=>{
+    e.preventDefault();
+
+    fetch(`http://localhost:3000/packages/${id}`,{
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+            name: Package_Name.value.trim(),
+            fee: Package_Fee.value,
+            duration: Duration.value.trim(),
+            subjects: Subjects.value.trim()
+        })
+    }).then(()=>{
+        alert("Package updated");
+        location.href="PackageList.html";
+    });
+});
+</script>
+
 </body>
 </html>

@@ -9,64 +9,82 @@
 
 <body>
 
-    <!-- HEADER -->
-    <header class="top-bar">
-        <div class="logo">
-            <a href="StaffHomepage.html">
-                <img src="images/logo1.png" alt="Altius Academy" >        
-            </a>
-        </div>
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">        
+        </a>
+    </div>
 
-        <nav class="nav-menu">
-            <a href="TeacherList.html">Teacher</a>
-            <a href="StudentList.html">Student</a>
-            <a href="ClassList.html">Class</a>
-            <a href="PackageList.html">Package</a>
-            <a href="report.html">Report</a>
-        </nav>
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
 
-        <div class="user-icon">
-            <span>👤</span>
-        </div>
-    </header>
+    <div class="user-icon">👤</div>
+</header>
 
-    <!-- MAIN CONTENT -->
-    <main class="content">
-        <!-- PAGE CONTENT GOES HERE -->
-        <form action="#" method="post">
-            <table class="form">
-                <tr>
-                    <td class="avatar" style="text-align: center;" colspan="2">👩🏼‍🏫</td>
-                </tr>
-                <tr>
-                    <td class="title" colspan="2">Add New Teacher</td>
-                </tr>
-                <tr>
-                    <td>Name:</td>
-                    <td><input type="text" id="Teacher_Name" name="Teacher_Name" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>IC: </td>
-                    <td><input type="text" id="Teacher_IC" name="Teacher_IC" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Email: </td>
-                    <td><input type="text" id="Teacher_Email" name="Teacher_Email" placeholder="(Example: staff123@gmail.com)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Phone Number:</td>
-                    <td><input type="text" id="Teacher_PhoneNum" name="Teacher_PhoneNum" placeholder="(Example: 0123456789)" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td>Address</td>
-                    <td><input type="password" id="Teacher_Address" name="Teacher_Address" style="width: 100%;" required></td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="text-align:center;"><input type="submit" class="button" value="Save"></td>
-                </tr>
-            </table>
-        </form>
-    </main>
+<main class="content">
+<form>
+<table class="form">
+<tr>
+    <td class="avatar" colspan="2" style="text-align:center;">👩🏼‍🏫</td>
+</tr>
+<tr>
+    <td class="title" colspan="2">Add New Teacher</td>
+</tr>
+<tr>
+    <td>Name:</td>
+    <td><input type="text" id="Teacher_Name" required></td>
+</tr>
+<tr>
+    <td>IC:</td>
+    <td><input type="text" id="Teacher_IC"></td>
+</tr>
+<tr>
+    <td>Email:</td>
+    <td><input type="text" id="Teacher_Email"></td>
+</tr>
+<tr>
+    <td>Phone Number:</td>
+    <td><input type="text" id="Teacher_PhoneNum"></td>
+</tr>
+<tr>
+    <td>Address:</td>
+    <td><input type="text" id="Teacher_Address"></td>
+</tr>
+<tr>
+    <td colspan="2" style="text-align:center;">
+        <button class="button">Save</button>
+    </td>
+</tr>
+</table>
+</form>
+</main>
+
+<script>
+document.querySelector("form").addEventListener("submit", e => {
+    e.preventDefault();
+
+    fetch("http://localhost:3000/teachers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name: document.getElementById("Teacher_Name").value.trim(),
+            ic: document.getElementById("Teacher_IC").value.trim(),
+            email: document.getElementById("Teacher_Email").value.trim(),
+            phone: document.getElementById("Teacher_PhoneNum").value.trim(),
+            address: document.getElementById("Teacher_Address").value.trim()
+        })
+    }).then(() => {
+        alert("Teacher added");
+        window.location.href = "TeacherList.html";
+    });
+});
+</script>
 
 </body>
 </html>

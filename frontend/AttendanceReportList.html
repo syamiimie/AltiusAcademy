@@ -5,15 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    
+
     <style>
     @media print {
         body * {
-            visibility: hidden; /* hide everything */
+            visibility: hidden;
         }
 
         .attendance-report, .attendance-report * {
-            visibility: visible; /* only report visible */
+            visibility: visible;
         }
 
         .attendance-report {
@@ -54,40 +54,37 @@
 <!-- MAIN CONTENT -->
 <main class="content attendance-report">
 
-    <!-- PAGE TITLE -->
     <div class="page-title">Attendance Report</div>
 
-    <!-- FILTER FORM -->
-    <div class="form">
-        <form method="GET" style="text-align:center;">
-            <label>Report Period:</label>
-            <input type="month" name="month" required>
-            <button class="button">Generate</button>
-            <a href="AttendanceReportPDFServlet" onclick="window.print()" class="button print-btn">Print</a>
-        </form>
+    <!-- FILTER -->
+    <div class="form" style="text-align:center;">
+        <label>Report Period:</label>
+        <input type="month" id="month">
+        <button class="button" onclick="loadReport()">Generate</button>
+        <button onclick="window.print()" class="button print-btn">Print</button>
     </div>
 
-    <!-- SUMMARY CARDS AT TOP -->
-    <div class="package-grid" style="margin-bottom: 30px;">
+    <!-- SUMMARY -->
+    <div class="package-grid" style="margin-bottom:30px;">
         <div class="package-card">
             <div class="package-title">Total Classes</div>
-            <p>15</p>
+            <p id="totalClasses">0</p>
         </div>
         <div class="package-card">
             <div class="package-title">Total Students</div>
-            <p>85</p>
+            <p id="totalStudents">0</p>
         </div>
         <div class="package-card">
             <div class="package-title">Total Present</div>
-            <p>78</p>
+            <p id="totalPresent">0</p>
         </div>
         <div class="package-card">
             <div class="package-title">Total Absent</div>
-            <p>7</p>
+            <p id="totalAbsent">0</p>
         </div>
     </div>
 
-    <!-- DETAIL TABLE -->
+    <!-- TABLE -->
     <div class="section">
         <div class="table-title">Attendance Details</div>
 
@@ -100,24 +97,58 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>Ahmad Ali</td>
-                    <td>Science Class</td>
-                    <td>2025-12-01</td>
-                    <td>Present</td>
-                </tr>
-                <tr>
-                    <td>Siti Aminah</td>
-                    <td>Math Class</td>
-                    <td>2025-12-01</td>
-                    <td>Absent</td>
-                </tr>
-            </tbody>
+            <tbody id="attendanceTable"></tbody>
         </table>
     </div>
 
 </main>
+
+<script>
+function loadReport(){
+    const month = document.getElementById("month").value;
+    if(!month){
+        alert("Please select month");
+        return;
+    }
+
+    fetch(`http://localhost:3000/reports/attendance?month=${month}`)
+    .then(res => res.json())
+    .then(data => {
+        const table = document.getElementById("attendanceTable");
+        table.innerHTML = "";
+
+        let present = 0;
+        let absent = 0;
+        let students = new Set();
+        let classes = new Set();
+
+        data.forEach(r => {
+            students.add(r.STUDENT_NAME);
+            classes.add(r.CLASS_NAME);
+
+            if(r.STATUS === "Present") present++;
+            else absent++;
+
+            table.innerHTML += `
+            <tr>
+                <td>${r.STUDENT_NAME}</td>
+                <td>${r.CLASS_NAME}</td>
+                <td>${r.ATTEND_DATE}</td>
+                <td>${r.STATUS}</td>
+            </tr>`;
+        });
+
+        document.getElementById("totalStudents").innerText = students.size;
+        document.getElementById("totalClasses").innerText = classes.size;
+        document.getElementById("totalPresent").innerText = present;
+        document.getElementById("totalAbsent").innerText = absent;
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Failed to load report");
+    });
+}
+</script>
 
 </body>
 </html>
