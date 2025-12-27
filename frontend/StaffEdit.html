@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Edit Staff Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
+
+    <div class="user-icon">👤</div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+<form id="staffEditForm">
+<table class="form">
+    <tr>
+        <td class="avatar" colspan="2" style="text-align:center;">👩‍💻</td>
+    </tr>
+    <tr>
+        <td class="title" colspan="2">Edit Staff Profile</td>
+    </tr>
+
+    <tr>
+        <td>Name:</td>
+        <td><input type="text" id="Staff_Name" required></td>
+    </tr>
+
+    <tr>
+        <td>Email:</td>
+        <td><input type="email" id="Staff_Email" required></td>
+    </tr>
+
+    <tr>
+        <td>Phone Number:</td>
+        <td><input type="text" id="Staff_PhoneNum" required></td>
+    </tr>
+
+    <tr>
+        <td>Username:</td>
+        <!-- 🔥 READONLY, NOT DISABLED -->
+        <td><input type="text" id="Staff_Username" readonly></td>
+    </tr>
+
+    <tr>
+        <td colspan="2" style="text-align:center;">
+            <button type="submit" class="button">Update</button>
+        </td>
+    </tr>
+</table>
+</form>
+</main>
+
+<script>
+/* =========================
+   AUTH CHECK
+========================= */
+const staffId = localStorage.getItem("staff_id");
+
+if (!staffId) {
+    alert("Please login first");
+    location.href = "login.html";
+}
+
+/* =========================
+   LOAD STAFF DATA
+========================= */
+fetch(`http://localhost:3000/staff/${staffId}`)
+.then(res => res.json())
+.then(s => {
+    Staff_Name.value = s.STAFF_NAME ?? "";
+    Staff_Email.value = s.STAFF_EMAIL ?? "";
+    Staff_PhoneNum.value = s.STAFF_PHONENUM ?? "";   // ✅ FIXED
+    Staff_Username.value = s.STAFF_USERNAME ?? "";
+});
+
+/* =========================
+   UPDATE STAFF
+========================= */
+staffEditForm.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const payload = {
+        name: Staff_Name.value.trim(),
+        email: Staff_Email.value.trim(),
+        phone: Staff_PhoneNum.value.trim(),
+        username: Staff_Username.value.trim()   // ✅ MUST SEND
+    };
+
+    const res = await fetch(`http://localhost:3000/staff/${staffId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        alert("Profile updated");
+        location.href = "StaffHomepage.html";
+    } else {
+        alert("Update failed");
+    }
+});
+</script>
+
+</body>
+</html>
