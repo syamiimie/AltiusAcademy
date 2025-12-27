@@ -1,55 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Students List</title>
-  <link rel="stylesheet" href="style.css">
+    <title>Altius Academy | Students List</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
+<!-- HEADER -->
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
+
+    <div class="user-icon">
+        <span>👤</span>
+    </div>
+</header>
+
+<!-- MAIN CONTENT -->
 <main class="content">
-<table class="section">
-<thead>
-<tr>
-  <th colspan="8">Students List</th>
-  <th><a href="StudentAdd.html" class="button">Add</a></th>
-</tr>
-<tr>
-  <th>ID</th><th>Name</th><th>IC</th><th>Address</th>
-  <th>Email</th><th>Phone</th><th>Type</th><th>Action</th>
-</tr>
-</thead>
-<tbody id="studentTable"></tbody>
-</table>
+
+    <table border="1" class="section">
+        <!-- Title Row -->
+        <tr>
+            <td class="title" colspan="7">Students List</td>
+            <td class="action-cell">
+                <a href="StudentAdd.html" class="button">Add</a>
+            </td>
+        </tr>
+
+        <!-- Header Row -->
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>IC</th>
+            <th>Address</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Type</th>
+            <th>Action</th>
+        </tr>
+
+        <!-- Dynamic Rows -->
+        <tbody id="studentTable"></tbody>
+    </table>
+
 </main>
 
 <script>
 fetch("http://localhost:3000/students")
-.then(r => r.json())
+.then(res => res.json())
 .then(data => {
-  const t = document.getElementById("studentTable");
-  data.forEach(s => {
-    t.innerHTML += `
-    <tr>
-      <td>${s.STUDENT_ID}</td>
-      <td>${s.STUDENT_NAME}</td>
-      <td>${s.STUDENT_IC ?? "-"}</td>
-      <td>${s.STUDENT_ADDRESS ?? "-"}</td>
-      <td>${s.STUDENT_EMAIL ?? "-"}</td>
-      <td>${s.STUDENT_PHONENUM ?? "-"}</td>
-      <td>${s.STUDENT_TYPE}</td>
-      <td>
-        <a class="button" href="StudentEdit.html?id=${s.STUDENT_ID}">Edit</a>
-        <button class="button" onclick="del(${s.STUDENT_ID})">Delete</button>
-      </td>
-    </tr>`;
-  });
+    const table = document.getElementById("studentTable");
+
+    data.forEach(s => {
+        table.innerHTML += `
+        <tr>
+            <td>${s.STUDENT_ID}</td>
+            <td>${s.STUDENT_NAME}</td>
+            <td>${s.STUDENT_IC ?? "-"}</td>
+            <td>${s.STUDENT_ADDRESS ?? "-"}</td>
+            <td>${s.STUDENT_EMAIL ?? "-"}</td>
+            <td>${s.STUDENT_PHONENUM ?? "-"}</td>
+            <td>${s.STUDENT_TYPE}</td>
+            <td class="action-cell">
+                <a href="StudentEdit.html?id=${s.STUDENT_ID}" class="button">Edit</a>
+
+                <form onsubmit="return del(${s.STUDENT_ID});" style="display:inline;">
+                    <button type="submit" class="button">Delete</button>
+                </form>
+            </td>
+        </tr>
+        `;
+    });
 });
 
-function del(id){
-  if(confirm("Delete student?")){
-    fetch(`http://localhost:3000/students/${id}`, { method:"DELETE" })
-    .then(()=>location.reload());
-  }
+function del(id) {
+    if (confirm("Delete this student?")) {
+        fetch(`http://localhost:3000/students/${id}`, {
+            method: "DELETE"
+        }).then(() => location.reload());
+    }
+    return false;
 }
 </script>
 

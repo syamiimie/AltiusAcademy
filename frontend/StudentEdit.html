@@ -1,59 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Edit Student</title>
-<link rel="stylesheet" href="style.css">
+    <title>Altius Academy | Students Details</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<form id="editForm" class="form">
-<h3>Edit Student</h3>
+<!-- HEADER -->
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
 
-<input id="student_name">
-<input id="student_ic">
-<input id="student_address">
-<input id="student_email">
-<input id="student_phone">
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="report.html">Report</a>
+    </nav>
 
-<select id="student_type">
-  <option value="Primary">Primary</option>
-  <option value="Secondary">Secondary</option>
-</select>
+    <div class="user-icon">
+        <span>👤</span>
+    </div>
+</header>
 
-<button class="button">Update</button>
+<!-- MAIN CONTENT -->
+<main class="content">
+
+<form id="editForm">
+    <table class="form">
+
+        <tr>
+            <td class="avatar" colspan="2" style="text-align:center;">🎓</td>
+        </tr>
+
+        <tr>
+            <td class="title" colspan="2">Edit Student Details</td>
+        </tr>
+
+        <tr>
+            <td>Name:</td>
+            <td>
+                <input type="text" id="student_name" style="width:100%;" required>
+            </td>
+        </tr>
+
+        <tr>
+            <td>IC:</td>
+            <td>
+                <input type="text" id="student_ic" style="width:100%;" required>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Address:</td>
+            <td>
+                <input type="text" id="student_address" style="width:100%;" required>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Email:</td>
+            <td>
+                <input type="text" id="student_email"
+                       placeholder="(Example: staff123@gmail.com)"
+                       style="width:100%;" required>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Phone Number:</td>
+            <td>
+                <input type="text" id="student_phone"
+                       placeholder="(Example: 0123456789)"
+                       style="width:100%;" required>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Type:</td>
+            <td>
+                <label>
+                    <input type="radio" name="student_type" value="Primary">
+                    Primary Student
+                </label>
+                &nbsp;&nbsp;
+                <label>
+                    <input type="radio" name="student_type" value="Secondary">
+                    Secondary Student
+                </label>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2" style="text-align:center;">
+                <button type="submit" class="button">Save</button>
+            </td>
+        </tr>
+
+    </table>
 </form>
 
-<script>
-const id = new URLSearchParams(location.search).get("id");
+</main>
 
+<script>
+const id = new URLSearchParams(window.location.search).get("id");
+
+// Load existing student data
 fetch(`http://localhost:3000/students/${id}`)
-.then(r => r.json())
+.then(res => res.json())
 .then(s => {
-  document.getElementById("student_name").value = s.STUDENT_NAME || "";
-  document.getElementById("student_ic").value = s.STUDENT_IC || "";
-  document.getElementById("student_address").value = s.STUDENT_ADDRESS || "";
-  document.getElementById("student_email").value = s.STUDENT_EMAIL || "";
-  document.getElementById("student_phone").value = s.STUDENT_PHONENUM || "";
-  document.getElementById("student_type").value = s.STUDENT_TYPE || "Primary";
+    document.getElementById("student_name").value = s.STUDENT_NAME || "";
+    document.getElementById("student_ic").value = s.STUDENT_IC || "";
+    document.getElementById("student_address").value = s.STUDENT_ADDRESS || "";
+    document.getElementById("student_email").value = s.STUDENT_EMAIL || "";
+    document.getElementById("student_phone").value = s.STUDENT_PHONENUM || "";
+
+    if (s.STUDENT_TYPE === "Secondary") {
+        document.querySelector('input[value="Secondary"]').checked = true;
+    } else {
+        document.querySelector('input[value="Primary"]').checked = true;
+    }
 });
 
-document.getElementById("editForm").addEventListener("submit", async e => {
-  e.preventDefault();
+// Update student
+document.getElementById("editForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
 
-  await fetch(`http://localhost:3000/students/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: document.getElementById("student_name").value.trim(),
-      ic: document.getElementById("student_ic").value.trim(),
-      address: document.getElementById("student_address").value.trim(),
-      email: document.getElementById("student_email").value.trim(),
-      phone: document.getElementById("student_phone").value.trim(),
-      type: document.getElementById("student_type").value
-    })
-  });
+    const payload = {
+        name: document.getElementById("student_name").value.trim(),
+        ic: document.getElementById("student_ic").value.trim(),
+        address: document.getElementById("student_address").value.trim(),
+        email: document.getElementById("student_email").value.trim(),
+        phone: document.getElementById("student_phone").value.trim(),
+        type: document.querySelector('input[name="student_type"]:checked').value
+    };
 
-  location.href = "StudentList.html";
+    await fetch(`http://localhost:3000/students/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    location.href = "StudentList.html";
 });
 </script>
 
