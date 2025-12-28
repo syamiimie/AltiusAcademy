@@ -59,11 +59,14 @@ body {
 /* ===== MAIN CONTENT ===== */
 .content {
     margin: 50px auto;
+    width: fit-content;
     width: 92%;
     background-color: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    padding: 10px;
+    box-shadow:
+    0 8px 15px rgba(0, 0, 0, 0.12),
+    0 15px 40px rgba(0, 0, 0, 0.08);
+    padding: 30px;
 }
 
 /* ===== BUTTON ===== */
@@ -72,7 +75,7 @@ body {
     color: #ffffff;
     font-size: 14px;          
     font-family: inherit;
-    margin: 0 2px;     
+    margin: 15px 2px;     
     line-height: 1;
     padding: 8px 10px;
     border-radius: 18px;
@@ -121,6 +124,7 @@ button.button {
 }
 
 .form label {
+    margin-bottom: 10px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -137,7 +141,7 @@ button.button {
 
 /* ===== TABLE CARD ===== */
 .section {
-    margin: 10px auto;
+    margin: 30px auto;
     width: 95%;
     background-color: #450050;
     border-radius: 22px;
@@ -145,6 +149,9 @@ button.button {
     color: #ffffff;
     padding: 18px;      
     overflow: hidden;
+    box-shadow:
+    0 8px 15px rgba(0, 0, 0, 0.12),
+    0 15px 40px rgba(0, 0, 0, 0.08);
 }
 
 
@@ -367,6 +374,10 @@ table.section th {
     display: flex;
     flex-direction: column;
     gap: 30px;
+}
+
+.filter{
+
 }
 
 /* ===== Responsive ===== */

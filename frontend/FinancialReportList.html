@@ -9,11 +9,11 @@
     <style>
     @media print {
         body * {
-            visibility: hidden; /* sembunyikan semua */
+            visibility: hidden; 
         }
 
         .financial-report, .financial-report * {
-            visibility: visible; /* hanya report yg nampak */
+            visibility: visible; 
         }
 
         .financial-report {
@@ -62,7 +62,7 @@
     <div class="form">
         <form method="GET" style="text-align:center;">
             <label>Report Period:</label>
-            <input type="month" name="month">
+            <input type="month" name="month"> 
             <button class="button">Generate</button>
             <a href="FinancialReportPDFServlet" onclick="window.print()" class="button print-btn">Print</a>
         </form>
