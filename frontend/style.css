@@ -58,22 +58,23 @@ body {
 
 /* ===== MAIN CONTENT ===== */
 .content {
-    margin: 30px auto;
+    margin: 50px auto;
     width: 92%;
     background-color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    padding: 30px;
+    padding: 10px;
 }
 
 /* ===== BUTTON ===== */
 .button {
     background-color: #8c249c;
     color: #ffffff;
-    font-size: 14px;          /* choose your size */
-    font-family: inherit;    /* VERY important */
+    font-size: 14px;          
+    font-family: inherit;
+    margin: 0 2px;     
     line-height: 1;
-    padding: 8px 16px;
+    padding: 8px 10px;
     border-radius: 18px;
     border: 1px solid #ffffff;
     cursor: pointer;
@@ -87,7 +88,7 @@ body {
 
 .add-button {
     font-size: 16px;
-    padding: 6px 14px; /* optional: keeps button balanced */
+    padding: 6px 14px; 
 }
 
 button.button {
@@ -105,27 +106,67 @@ button.button {
     color: #ffffff;
 }
 
+.form input[type="text"],
+.form input[type="email"],
+.form input,
+.form input[type="number"],
+.form input[type="password"] {
+    width: 100%;
+    height: 44px;              
+    padding: 8px 12px;         
+    font-size: 16px;           
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.form label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form input[type="radio"] {
+    transform: scale(1.2); 
+    margin: 0;             
+    vertical-align: middle;
+}
 .form td {
     padding: 10px 15px;
 }
 
 /* ===== TABLE CARD ===== */
 .section {
-    margin: 40px auto;
+    margin: 10px auto;
     width: 95%;
     background-color: #450050;
-    border-radius: 22px;          
-    border-collapse: collapse;
+    border-radius: 22px;
     border: 1px solid #ffffff;
     color: #ffffff;
-    padding: 18px;               
+    padding: 18px;      
     overflow: hidden;
 }
+
 
 /* ===== TABLE ===== */
 .section table {
     width: 100%;
-    border-collapse: collapse;   
+    border-collapse: collapse;
+       
+}
+
+table.section td.titles {
+    font-size: 26px;
+    font-weight: bold;
+    padding: 24px 20px;
+    text-align: center;
+}
+
+table.section th {
+    border: 1px solid #ffffff;
+    padding: 14px 12px;           
+    text-align: center;
+    font-size: 15px;
 }
 
 /* ===== TABLE TITLE ===== */
@@ -166,11 +207,12 @@ button.button {
 }
 
 /* ===== TITLE TEXT ===== */
-.title {
+.titles {
     text-align: center;
     font-size: 24px;
     font-weight: bold;
     color: #ffffff;
+    padding: 24px 20px; 
 }
 
 /* ===== PACKAGE CARD ===== */
