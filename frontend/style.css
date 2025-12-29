@@ -139,6 +139,17 @@ button.button {
     padding: 10px 15px;
 }
 
+input[type="text"],
+.select-class {
+    width: 100%;
+    height: 34px;              
+    padding: 8px 12px;         
+    font-size: 16px;           
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;    
+}
+
 /* ===== TABLE CARD ===== */
 .section {
     margin: 30px auto;
@@ -376,9 +387,6 @@ table.section th {
     gap: 30px;
 }
 
-.filter{
-
-}
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
