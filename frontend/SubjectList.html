@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Altius Academy | Subject List</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="top-bar">
+  <div class="logo">
+    <a href="StaffHomepage.html">
+      <img src="images/logo1.png" alt="Altius Academy">
+    </a>
+  </div>
+
+  <nav class="nav-menu">
+    <a href="TeacherList.html">Teacher</a>
+    <a href="StudentList.html">Student</a>
+    <a href="ClassList.html">Class</a>
+    <a href="PackageList.html">Package</a>
+    <a href="SubjectList.html" class="active">Subject</a>
+    <a href="report.html">Report</a>
+  </nav>
+
+  <div class="user-icon">👤</div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <div class="page-title">
+    Subject List
+    <a href="SubjectAdd.html" class="button add-button">Add</a>
+  </div>
+
+  <!-- CARD GRID -->
+  <div class="package-grid" id="subjectCards"></div>
+
+</main>
+
+<script>
+fetch("http://localhost:3000/subjects")
+.then(res => res.json())
+.then(data => {
+
+  // 🔹 GROUP SUBJECTS BY PACKAGE
+  const grouped = {};
+  data.forEach(s => {
+    const pkg = s.PACKAGE_NAME || "No Package";
+    if (!grouped[pkg]) grouped[pkg] = [];
+    grouped[pkg].push(s);
+  });
+
+  const container = document.getElementById("subjectCards");
+  container.innerHTML = "";
+
+  // 🔹 RENDER 1 CARD = 1 PACKAGE
+  Object.keys(grouped).forEach(pkgName => {
+    const subjects = grouped[pkgName];
+
+    container.innerHTML += `
+      <div class="package-card">
+        <h3 class="package-title">${pkgName}</h3>
+
+        <div style="margin-top:12px;">
+          ${subjects.map(s => `
+            <div style="
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              margin-bottom:8px;
+            ">
+              <span>• ${s.SUBJECT_NAME}</span>
+
+              <span>
+                <a href="SubjectEdit.html?id=${s.SUBJECT_ID}"
+                   class="button"
+                   style="padding:4px 12px;font-size:13px;">
+                  Edit
+                </a>
+                <button class="button"
+                        style="padding:4px 12px;font-size:13px;"
+                        onclick="del(${s.SUBJECT_ID})">
+                  Delete
+                </button>
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  });
+});
+
+// 🔥 DELETE SUBJECT
+function del(id){
+  if(confirm("Delete this subject?")){
+    fetch("http://localhost:3000/subjects/" + id, {
+      method: "DELETE"
+    }).then(() => location.reload());
+  }
+}
+</script>
+
+</body>
+</html>
