@@ -18,6 +18,7 @@ app.use("/auth", require("./routes/auth.routes"));
 app.use("/teachers", require("./routes/teacher.routes"));
 app.use("/packages", require("./routes/package.routes"));
 app.use("/classes", require("./routes/class.routes"));
+app.use("/subjects", require("./routes/subject.routes"));
 app.use("/reports", reportRoutes);
 app.listen(PORT, () => {
   console.log(`🚀 API running at http://localhost:${PORT}`);

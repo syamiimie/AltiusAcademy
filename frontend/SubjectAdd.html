@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Add Subject</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="SubjectList.html" class="active">Subject</a>
+        <a href="report.html">Report</a>
+    </nav>
+
+    <div class="user-icon">👤</div>
+</header>
+
+<main class="content">
+<table border="1" class="section">
+<thead>
+<tr>
+    <td class="title" colspan="2">Add Subject</td>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+    <td>Subject Name</td>
+    <td>
+        <input type="text" id="subjectName" required>
+    </td>
+</tr>
+
+<tr>
+    <td>Package</td>
+    <td>
+        <select id="packageId" required>
+            <option value="">-- Select Package --</option>
+        </select>
+    </td>
+</tr>
+
+<tr>
+    <td colspan="2" class="action-cell">
+        <button class="button" onclick="save()">Save</button>
+        <a href="SubjectList.html" class="button">Cancel</a>
+    </td>
+</tr>
+</tbody>
+</table>
+</main>
+
+<script>
+// LOAD PACKAGE DROPDOWN
+fetch("http://localhost:3000/packages")
+.then(res => res.json())
+.then(data => {
+    const select = document.getElementById("packageId");
+    data.forEach(p => {
+        select.innerHTML += `
+            <option value="${p.PACKAGE_ID}">
+                ${p.PACKAGE_NAME}
+            </option>
+        `;
+    });
+});
+
+function save(){
+    const subjectName = document.getElementById("subjectName").value;
+    const packageId = document.getElementById("packageId").value;
+
+    if(subjectName === "" || packageId === ""){
+        alert("Please fill in all fields");
+        return;
+    }
+
+    fetch("http://localhost:3000/subjects",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+            subject_name: subjectName,
+            package_id: packageId
+        })
+    }).then(()=>{
+        alert("Subject added successfully");
+        window.location.href = "SubjectList.html";
+    });
+}
+</script>
+
+</body>
+</html>
