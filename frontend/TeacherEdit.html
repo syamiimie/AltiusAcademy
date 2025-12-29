@@ -24,8 +24,11 @@
         <a href="SubjectList.html" class="active">Subject</a>
         <a href="report.html">Report</a>
     </nav>
+    
+    <div class="user-icon" onclick="goStaffHome()" style="cursor:pointer;">
+    👤
+</div>
 
-    <div class="user-icon">👤</div>
 </header>
 
 <main class="content">
@@ -97,6 +100,18 @@ document.querySelector("form").addEventListener("submit", e => {
         window.location.href = "TeacherList.html";
     });
 });
+
+function goStaffHome(){
+    const staff = localStorage.getItem("staff");
+
+    if(!staff){
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    window.location.href = "StaffHomepage.html";
+}
 </script>
 
 </body>

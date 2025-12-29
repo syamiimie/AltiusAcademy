@@ -9,6 +9,7 @@
 
 <body>
 
+<!-- HEADER -->
 <header class="top-bar">
     <div class="logo">
         <a href="StaffHomepage.html">
@@ -21,11 +22,15 @@
         <a href="StudentList.html">Student</a>
         <a href="ClassList.html">Class</a>
         <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html" class="active">Subject</a>
+        <a href="SubjectList.html">Subject</a>
         <a href="report.html">Report</a>
     </nav>
 
-    <div class="user-icon">👤</div>
+    <!-- USER ICON + LOGOUT -->
+    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+        <button class="button" onclick="logout()">Logout</button>
+    </div>
 </header>
 
 <!-- MAIN CONTENT -->
@@ -47,8 +52,13 @@
             <p class="email" id="staffEmail">-</p>
             <p class="phone" id="staffPhone">-</p>
 
-            <a href="StaffEdit.html" class="btn">Edit Profile</a>
+            <!-- BUTTONS -->
+            <div style="display:flex; gap:12px; justify-content:center; margin-top:15px;">
+                <a href="StaffEdit.html" class="btn">Edit Profile</a>
+                <a href="StaffAdd.html" class="btn">Add Staff</a>
+            </div>
         </div>
+
     </div>
 
     <!-- RIGHT COLUMN -->
@@ -57,6 +67,7 @@
         <div class="section-title">📊 Academy Statistics</div>
 
         <div class="stats-column">
+
             <div class="card">
                 <h3>🎓 Student Statistics</h3>
                 <p>Total Students: <span>--</span></p>
@@ -70,13 +81,14 @@
                 <p>Average Students per Teacher: <span>--</span></p>
                 <p>Highest Passing Rate: <span>--</span></p>
             </div>
+
         </div>
     </div>
 
 </div>
 </main>
 
-<!-- 🔥 SCRIPT -->
+<!-- SCRIPT -->
 <script>
 const staff = JSON.parse(localStorage.getItem("staff"));
 
@@ -85,9 +97,23 @@ if (!staff) {
     window.location.href = "login.html";
 }
 
+// DISPLAY STAFF INFO
 document.getElementById("staffName").innerText = staff.STAFF_NAME;
 document.getElementById("staffEmail").innerText = staff.STAFF_EMAIL;
-document.getElementById("staffPhone").innerText = staff.STAFF_PHONENUM;
+document.getElementById("staffPhone").innerText = staff.STAFF_PHONENUM || "-";
+
+// ICON CLICK → HOMEPAGE
+function goStaffHome(){
+    window.location.href = "StaffHomepage.html";
+}
+
+// LOGOUT
+function logout(){
+    if(confirm("Logout from system?")){
+        localStorage.removeItem("staff");
+        window.location.href = "login.html";
+    }
+}
 </script>
 
 </body>

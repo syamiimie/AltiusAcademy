@@ -26,7 +26,9 @@
         <a href="report.html">Report</a>
     </nav>
 
-    <div class="user-icon">👤</div>
+    <div class="user-icon" onclick="goStaffHome()" style="cursor:pointer;">
+    👤
+</div>
 </header>
 
 <!-- MAIN CONTENT -->
@@ -93,6 +95,17 @@ document.getElementById("staffAddForm").addEventListener("submit", async e => {
         alert("Failed to add staff");
     }
 });
+function goStaffHome(){
+    const staff = localStorage.getItem("staff");
+
+    if(!staff){
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    window.location.href = "StaffHomepage.html";
+}
 </script>
 
 </body>
