@@ -3,7 +3,6 @@
 <head>
     <title>Altius Academy | Edit Class</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -12,113 +11,150 @@
 <header class="top-bar">
     <div class="logo">
         <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
+            <img src="images/logo1.png">
         </a>
     </div>
 
     <nav class="nav-menu">
         <a href="TeacherList.html">Teacher</a>
         <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
+        <a href="ClassList.html" class="active">Class</a>
         <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html" class="active">Subject</a>
+        <a href="SubjectList.html">Subject</a>
         <a href="report.html">Report</a>
     </nav>
 
-    <!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+    <div class="user-icon" style="display:flex; gap:10px;">
         <button class="button" onclick="logout()">Logout</button>
         <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
     </div>
 </header>
 
 <main class="content">
+
 <form id="classForm">
 <table class="form">
-<tr>
-    <td class="avatar" colspan="2" style="text-align:center;">🏫</td>
-</tr>
-<tr>
-    <td class="titles" colspan="2">Edit Class Details</td>
-</tr>
+<tr><td colspan="2" class="titles">Edit Class Details</td></tr>
+
+<tr><td>Name</td><td><input id="Class_Name"></td></tr>
+<tr><td>Time</td><td><input id="Class_Time"></td></tr>
+<tr><td>Day</td><td><input id="Class_Day"></td></tr>
+<tr><td>Subject ID</td><td><input id="Class_Subjects"></td></tr>
+<tr><td>Teacher ID</td><td><input id="Class_Teacher"></td></tr>
 
 <tr>
-    <td>Name:</td>
-    <td><input id="Class_Name" required></td>
-</tr>
-
-<tr>
-    <td>Time:</td>
-    <td><input id="Class_Time" required></td>
-</tr>
-
-<tr>
-    <td>Day:</td>
-    <td><input id="Class_Day" required></td>
-</tr>
-
-<tr>
-    <td>Subject ID:</td>
-    <td><input id="Class_Subjects" required></td>
-</tr>
-
-<tr>
-    <td>Teacher ID:</td>
-    <td><input id="Class_Teacher" required></td>
-</tr>
-
-<tr>
-    <td colspan="2" style="text-align:center;">
-        <button class="button">Update</button>
-    </td>
+  <td colspan="2" style="text-align:center">
+    <button class="button">Update</button>
+  </td>
 </tr>
 </table>
 </form>
+
+<br>
+
+<table class="form">
+<tr><td colspan="2" class="titles">Prerequisite Classes</td></tr>
+
+<tr>
+  <td>Select Class</td>
+  <td>
+    <select id="preSelect"></select>
+    <button type="button" class="button" onclick="addPrereq()">Add</button>
+  </td>
+</tr>
+
+<tr>
+  <td colspan="2">
+    <ul id="preList"></ul>
+  </td>
+</tr>
+</table>
+
 </main>
 
 <script>
+const API = "http://localhost:3000";
 const id = new URLSearchParams(location.search).get("id");
 
-fetch(`http://localhost:3000/classes/${id}`)
-.then(res=>res.json())
+// LOAD CLASS
+fetch(`${API}/classes/${id}`)
+.then(r=>r.json())
 .then(c=>{
-    Class_Name.value = c.CLASS_NAME || "";
-    Class_Time.value = c.CLASS_TIME || "";
-    Class_Day.value = c.CLASS_DAY || "";
-    Class_Subjects.value = c.SUBJECT_ID || "";
-    Class_Teacher.value = c.TEACHER_ID || "";
+  Class_Name.value = c.CLASS_NAME;
+  Class_Time.value = c.CLASS_TIME;
+  Class_Day.value = c.CLASS_DAY;
+  Class_Subjects.value = c.SUBJECT_ID;
+  Class_Teacher.value = c.TEACHER_ID;
 });
 
-document.getElementById("classForm").onsubmit = e => {
-    e.preventDefault();
-
-    fetch(`http://localhost:3000/classes/${id}`,{
-        method:"PUT",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
-            name: Class_Name.value.trim(),
-            time: Class_Time.value.trim(),
-            day: Class_Day.value.trim(),
-            subject_id: Class_Subjects.value.trim(),
-            teacher_id: Class_Teacher.value.trim()
-        })
-    }).then(()=>{
-        alert("Class updated");
-        location.href="ClassList.html";
-    });
+// UPDATE
+classForm.onsubmit = e => {
+  e.preventDefault();
+  fetch(`${API}/classes/${id}`,{
+    method:"PUT",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      name: Class_Name.value,
+      time: Class_Time.value,
+      day: Class_Day.value,
+      subject_id: Class_Subjects.value,
+      teacher_id: Class_Teacher.value
+    })
+  }).then(()=>alert("Updated"));
 };
 
-function goStaffHome(){
-    const staff = localStorage.getItem("staff");
-
-    if(!staff){
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
+// LOAD CLASSES FOR PREREQ
+fetch(`${API}/classes`)
+.then(r=>r.json())
+.then(data=>{
+  preSelect.innerHTML = "<option value=''>-- Select Class --</option>";
+  data.forEach(c=>{
+    if(c.CLASS_ID != id){
+      preSelect.innerHTML += `<option value="${c.CLASS_ID}">${c.CLASS_NAME}</option>`;
     }
+  });
+});
 
-    window.location.href = "StaffHomepage.html";
+// LOAD PREREQ
+function loadPrereq(){
+  fetch(`${API}/classes/${id}/prerequisites`)
+  .then(r=>r.json())
+  .then(data=>{
+    preList.innerHTML="";
+    data.forEach(p=>{
+      preList.innerHTML += `<li>${p.CLASS_NAME}
+        <button onclick="removePrereq(${p.PREREQUISITE_ID})">❌</button>
+      </li>`;
+    });
+  });
+}
+
+function addPrereq(){
+  if(!preSelect.value) return;
+  fetch(`${API}/classes/${id}/prerequisites`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ prerequisite_class_id: preSelect.value })
+  }).then(loadPrereq);
+}
+
+function removePrereq(pid){
+  fetch(`${API}/classes/prerequisites/${pid}`,{
+    method:"DELETE"
+  }).then(loadPrereq);
+}
+
+loadPrereq();
+
+function goStaffHome(){
+  if(!localStorage.getItem("staff")){
+    alert("Login first"); location.href="login.html"; return;
+  }
+  location.href="StaffHomepage.html";
+}
+function logout(){
+  localStorage.removeItem("staff");
+  location.href="login.html";
 }
 </script>
 

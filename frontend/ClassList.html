@@ -3,7 +3,6 @@
 <head>
     <title>Altius Academy | Class List</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -12,24 +11,22 @@
 <header class="top-bar">
     <div class="logo">
         <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
+            <img src="images/logo1.png">
         </a>
     </div>
 
     <nav class="nav-menu">
         <a href="TeacherList.html">Teacher</a>
         <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
+        <a href="ClassList.html" class="active">Class</a>
         <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html" class="active">Subject</a>
+        <a href="SubjectList.html">Subject</a>
         <a href="report.html">Report</a>
     </nav>
 
-<!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+    <div class="user-icon" style="display:flex; gap:10px;">
         <button class="button" onclick="logout()">Logout</button>
         <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
     </div>
 </header>
 
@@ -37,7 +34,7 @@
 <table border="1" class="section">
 <thead>
 <tr>
-    <td class="titles" colspan="6">Class List</td>
+    <td class="titles" colspan="7">Class List</td>
     <td class="action-cell">
         <a href="ClassAdd.html" class="button">Add</a>
     </td>
@@ -49,6 +46,7 @@
     <th>Day</th>
     <th>Subject</th>
     <th>Teacher</th>
+    <th>Prerequisite</th>
     <th>Action</th>
 </tr>
 </thead>
@@ -58,10 +56,11 @@
 </main>
 
 <script>
-fetch("http://localhost:3000/classes")
+fetch("http://localhost:3000/classes/with-prereq")
 .then(res => res.json())
 .then(data => {
     const table = document.getElementById("classTable");
+    table.innerHTML = "";
 
     data.forEach(c => {
         table.innerHTML += `
@@ -72,9 +71,10 @@ fetch("http://localhost:3000/classes")
             <td>${c.CLASS_DAY}</td>
             <td>${c.SUBJECT_NAME}</td>
             <td>${c.TEACHER_NAME}</td>
+            <td>${c.PREREQUISITES || "-"}</td>
             <td class="action-cell">
                 <a href="ClassEdit.html?id=${c.CLASS_ID}" class="button">Edit</a>
-                <button class="button" onclick="del(${c.CLASS_ID})">Delete</button>
+                <button class="button" onclick="del('${c.CLASS_ID}')">Delete</button>
             </td>
         </tr>`;
     });
@@ -87,16 +87,19 @@ function del(id){
         }).then(()=>location.reload());
     }
 }
-function goStaffHome(){
-    const staff = localStorage.getItem("staff");
 
-    if(!staff){
+function goStaffHome(){
+    if(!localStorage.getItem("staff")){
         alert("Please login first");
-        window.location.href = "login.html";
+        location.href="login.html";
         return;
     }
+    location.href="StaffHomepage.html";
+}
 
-    window.location.href = "StaffHomepage.html";
+function logout(){
+    localStorage.removeItem("staff");
+    location.href="login.html";
 }
 </script>
 
