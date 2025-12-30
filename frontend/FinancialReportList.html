@@ -98,7 +98,8 @@ document.getElementById("reportForm").addEventListener("submit", e => {
     e.preventDefault();
     const month = document.getElementById("month").value;
 
-    fetch(`http://localhost:3000/financial-report?month=${month}`)
+    fetch(`http://localhost:3000/reports/financial-report?month=${month}`)
+
         .then(res => res.json())
         .then(data => {
             document.getElementById("totalRevenue").innerText =
