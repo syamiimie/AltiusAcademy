@@ -25,13 +25,10 @@
         <a href="report.html">Report</a>
     </nav>
 
-    <!-- USER ICON + LOGOUT -->
     <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
         <button class="button" onclick="logout()">Logout</button>
         <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
     </div>
-
 </header>
 
 <main class="content">
@@ -61,7 +58,7 @@
 
 <tr>
     <td colspan="2" class="action-cell">
-        <button class="button" onclick="save()">Save</button>
+        <button class="button" id="saveBtn" onclick="save()" disabled>Save</button>
         <a href="SubjectList.html" class="button">Cancel</a>
     </td>
 </tr>
@@ -70,11 +67,14 @@
 </main>
 
 <script>
+// ===============================
 // LOAD PACKAGE DROPDOWN
+// ===============================
 fetch("http://localhost:3000/packages")
 .then(res => res.json())
 .then(data => {
     const select = document.getElementById("packageId");
+
     data.forEach(p => {
         select.innerHTML += `
             <option value="${p.PACKAGE_ID}">
@@ -82,29 +82,53 @@ fetch("http://localhost:3000/packages")
             </option>
         `;
     });
+
+    document.getElementById("saveBtn").disabled = false;
+})
+.catch(() => {
+    alert("Failed to load packages");
 });
 
+// ===============================
+// SAVE SUBJECT
+// ===============================
 function save(){
-    const subjectName = document.getElementById("subjectName").value;
+    const subjectName = document.getElementById("subjectName").value.trim();
     const packageId = document.getElementById("packageId").value;
 
-    if(subjectName === "" || packageId === ""){
+    if(!subjectName || !packageId){
         alert("Please fill in all fields");
         return;
     }
 
-    fetch("http://localhost:3000/subjects",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+    fetch("http://localhost:3000/subjects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             subject_name: subjectName,
-            package_id: packageId
+            package_id: Number(packageId)
         })
-    }).then(()=>{
+    })
+    .then(async res => {
+        if (!res.ok) {
+            const err = await res.json();
+            throw err;
+        }
+        return res.json();
+    })
+    .then(() => {
         alert("Subject added successfully");
         window.location.href = "SubjectList.html";
+    })
+    .catch(err => {
+        console.error(err);
+        alert(err.message || "Failed to add subject");
     });
 }
+
+// ===============================
+// STAFF HOME CHECK
+// ===============================
 function goStaffHome(){
     const staff = localStorage.getItem("staff");
 

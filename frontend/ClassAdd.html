@@ -45,10 +45,7 @@
     <td class="titles" colspan="2">Add New Class</td>
 </tr>
 
-<tr>
-    <td>Class ID:</td>
-    <td><input id="Class_ID" placeholder="C07" required></td>
-</tr>
+<!-- Removed Class ID row because it's auto-generated -->
 
 <tr>
     <td>Name:</td>
@@ -81,7 +78,6 @@
     <td>
         <input id="searchPrereq" placeholder="Search class code or name">
         <div id="searchResult" class="dropdown"></div>
-
         <ul id="selectedPrereq"></ul>
     </td>
 </tr>
@@ -96,17 +92,21 @@
 </form>
 </main>
 
-<!-- ================= SCRIPT ================= -->
 <script>
+/* ================= GLOBAL ================= */
 const selectedPrereqs = [];
 
-/* -------- SEARCH CLASSES -------- */
-document.getElementById("searchPrereq").addEventListener("input", async e => {
+const form = document.getElementById("classForm");
+const searchInput = document.getElementById("searchPrereq");
+const searchResult = document.getElementById("searchResult");
+const selectedPrereqList = document.getElementById("selectedPrereq");
+
+/* ================= SEARCH CLASSES ================= */
+searchInput.addEventListener("input", async e => {
     const keyword = e.target.value.trim();
-    if (!keyword) {
-        searchResult.innerHTML = "";
-        return;
-    }
+    searchResult.innerHTML = "";
+
+    if (!keyword) return;
 
     const res = await fetch("http://localhost:3000/classes");
     const classes = await res.json();
@@ -116,7 +116,6 @@ document.getElementById("searchPrereq").addEventListener("input", async e => {
         c.CLASS_NAME.toLowerCase().includes(keyword.toLowerCase())
     );
 
-    searchResult.innerHTML = "";
     filtered.forEach(c => {
         const div = document.createElement("div");
         div.textContent = `${c.CLASS_ID} - ${c.CLASS_NAME}`;
@@ -125,16 +124,17 @@ document.getElementById("searchPrereq").addEventListener("input", async e => {
     });
 });
 
-/* -------- ADD PREREQUISITE -------- */
+/* ================= ADD PREREQUISITE ================= */
 function addPrereq(classId) {
     if (selectedPrereqs.includes(classId)) return;
 
     selectedPrereqs.push(classId);
 
     const li = document.createElement("li");
-    li.textContent = classId;
+    li.textContent = classId + " ";
 
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.textContent = "✖";
     btn.onclick = () => {
         selectedPrereqs.splice(selectedPrereqs.indexOf(classId), 1);
@@ -142,51 +142,55 @@ function addPrereq(classId) {
     };
 
     li.appendChild(btn);
-    selectedPrereq.appendChild(li);
+    selectedPrereqList.appendChild(li);
+
     searchResult.innerHTML = "";
-    searchPrereq.value = "";
+    searchInput.value = "";
 }
 
-/* -------- SUBMIT FORM -------- */
-document.getElementById("classForm").onsubmit = async e => {
+/* ================= SUBMIT FORM ================= */
+form.addEventListener("submit", async e => {
     e.preventDefault();
 
-    const classId = Class_ID.value.trim();
+    const payload = {
+        name: document.getElementById("Class_Name").value.trim(),
+        time: document.getElementById("Class_Time").value.trim(),
+        day: document.getElementById("Class_Day").value.trim(),
+        subject_id: document.getElementById("Class_Subjects").value.trim(),
+        teacher_id: document.getElementById("Class_Teacher").value.trim(),
+        prerequisites: selectedPrereqs
+    };
 
-    // 1️⃣ ADD CLASS
-    await fetch("http://localhost:3000/classes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            id: classId,
-            name: Class_Name.value.trim(),
-            time: Class_Time.value.trim(),
-            day: Class_Day.value.trim(),
-            subject_id: Class_Subjects.value.trim(),
-            teacher_id: Class_Teacher.value.trim()
-        })
-    });
-
-    // 2️⃣ ADD PREREQUISITES
-    for (const p of selectedPrereqs) {
-        await fetch(`http://localhost:3000/classes/${classId}/prerequisites`, {
+    try {
+        const res = await fetch("http://localhost:3000/classes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                prerequisite_class_id: p
-            })
+            body: JSON.stringify(payload)
         });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || "Failed to add class");
+        }
+
+        alert("Class added successfully");
+        window.location.href = "ClassList.html";
+
+    } catch (err) {
+        alert("Error: " + err.message);
     }
+});
 
-    alert("Class added successfully");
-    location.href = "ClassList.html";
-};
-
-/* -------- NAV -------- */
-function goStaffHome(){
+/* ================= NAV ================= */
+function goStaffHome() {
     window.location.href = "StaffHomepage.html";
 }
-</script>
 
+function logout() {
+    localStorage.removeItem("staff");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>

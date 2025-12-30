@@ -27,7 +27,7 @@ exports.getAllSubjects = async (req, res) => {
 
   } catch (e) {
     console.error("Get All Subjects Error:", e);
-    res.status(500).json(e);
+    res.status(500).json({ message: "Failed to load subjects" });
   } finally {
     if (conn) await conn.close();
   }
@@ -50,17 +50,24 @@ exports.getSubjectById = async (req, res) => {
 
   } catch (e) {
     console.error("Get Subject By ID Error:", e);
-    res.status(500).json(e);
+    res.status(500).json({ message: "Failed to load subject" });
   } finally {
     if (conn) await conn.close();
   }
 };
 
 // ===============================
-// ADD SUBJECT
+// ADD SUBJECT  ✅ FIXED
 // ===============================
 exports.addSubject = async (req, res) => {
   const { subject_name, package_id } = req.body;
+
+  // 🔐 Validation
+  if (!subject_name || !package_id) {
+    return res.status(400).json({
+      message: "Subject name and package are required"
+    });
+  }
 
   let conn;
   try {
@@ -80,7 +87,7 @@ exports.addSubject = async (req, res) => {
       )
       `,
       {
-        subject_name: subject_name,
+        subject_name: subject_name.trim(),
         package_id: Number(package_id)
       },
       { autoCommit: true }
@@ -90,18 +97,38 @@ exports.addSubject = async (req, res) => {
 
   } catch (e) {
     console.error("Add Subject Error:", e);
-    res.status(500).json(e);
+
+    // 🧠 Friendly Oracle errors
+    let msg = "Failed to add subject";
+
+    if (e.errorNum === 1) {
+      msg = "Subject name already exists";
+    } else if (e.errorNum === 2291) {
+      msg = "Invalid package selected";
+    }
+
+    res.status(500).json({
+      message: msg,
+      oracleError: e.message
+    });
+
   } finally {
     if (conn) await conn.close();
   }
 };
 
 // ===============================
-// UPDATE SUBJECT  ✅ FIXED
+// UPDATE SUBJECT
 // ===============================
 exports.updateSubject = async (req, res) => {
   const id = Number(req.params.id);
   const { subject_name, package_id } = req.body;
+
+  if (!subject_name || !package_id) {
+    return res.status(400).json({
+      message: "Subject name and package are required"
+    });
+  }
 
   let conn;
   try {
@@ -116,20 +143,21 @@ exports.updateSubject = async (req, res) => {
       `,
       {
         id,
-        subject_name: subject_name,
+        subject_name: subject_name.trim(),
         package_id: Number(package_id)
       },
       { autoCommit: true }
     );
 
-    // Debug (optional)
-    console.log("Rows updated:", result.rowsAffected);
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ message: "Subject not found" });
+    }
 
     res.json({ success: true });
 
   } catch (e) {
     console.error("Update Subject Error:", e);
-    res.status(500).json(e);
+    res.status(500).json({ message: "Failed to update subject" });
   } finally {
     if (conn) await conn.close();
   }
@@ -153,7 +181,7 @@ exports.deleteSubject = async (req, res) => {
 
   } catch (e) {
     console.error("Delete Subject Error:", e);
-    res.status(500).json(e);
+    res.status(500).json({ message: "Failed to delete subject" });
   } finally {
     if (conn) await conn.close();
   }

@@ -1,20 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/class.controller");
 
-// ⚠️ ROUTE KHAS MESTI ATAS
-router.get("/with-prereq", controller.getClassListWithPrereq);
+const classController = require("../controllers/class.controller");
 
-// NORMAL CRUD
-router.get("/", controller.getAllClasses);
-router.get("/:id", controller.getClassById);
-router.post("/", controller.addClass);
-router.put("/:id", controller.updateClass);
-router.delete("/:id", controller.deleteClass);
+/* ================= CLASS ROUTES ================= */
 
-// PREREQUISITE
-router.get("/:id/prerequisites", controller.getPrerequisites);
-router.post("/:id/prerequisites", controller.addPrerequisite);
-router.delete("/prerequisites/:pid", controller.deletePrerequisite);
+// GET all classes
+router.get("/", classController.getAllClasses);
+
+// GET class list with prerequisites
+router.get("/with-prereq", classController.getClassListWithPrereq);
+
+// ADD class (handles prereqs internally)
+router.post("/", classController.addClass);
+
+// DELETE class
+router.delete("/:id", classController.deleteClass);
 
 module.exports = router;
