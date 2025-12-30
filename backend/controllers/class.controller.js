@@ -3,233 +3,139 @@ const db = require("../db/db");
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
-// ================= GET ALL CLASSES =================
-exports.getAllClasses = async (req, res) => {
-  let conn;
-  try {
-    conn = await oracledb.getConnection(db);
-    const r = await conn.execute(`
-      SELECT 
-        c.CLASS_ID,
-        c.CLASS_NAME,
-        c.CLASS_TIME,
-        c.CLASS_DAY,
-        s.SUBJECT_NAME,
-        t.TEACHER_NAME,
-        c.SUBJECT_ID,
-        c.TEACHER_ID
-      FROM CLASS c
-      JOIN SUBJECT s ON c.SUBJECT_ID = s.SUBJECT_ID
-      JOIN TEACHER t ON c.TEACHER_ID = t.TEACHER_ID
-      ORDER BY c.CLASS_ID
-    `);
-    res.json(r.rows);
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
+// ===============================
+// ClASS
+// ===============================
+
+// 1️⃣ GET all classes
+exports.getAllClasses = (req, res) => {
+    const sql = "SELECT * FROM class";
+    db.query(sql, (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result);
+    });
 };
 
-// ================= GET CLASS BY ID =================
-exports.getClassById = async (req, res) => {
-  let conn;
-  try {
-    conn = await oracledb.getConnection(db);
-    const r = await conn.execute(
-      `SELECT * FROM CLASS WHERE CLASS_ID = :id`,
-      { id: req.params.id }   // 🔥 STRING
+// 2️⃣ GET class by ID
+exports.getClassById = (req, res) => {
+    const sql = "SELECT * FROM class WHERE class_id = ?";
+    db.query(sql, [req.params.id], (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result[0]);
+    });
+};
+
+// 3️⃣ ADD class
+exports.addClass = (req, res) => {
+    const { name, time, day, subject_id, teacher_id } = req.body;
+
+    const sql = `
+        INSERT INTO class (class_name, class_time, class_day, subject_id, teacher_id)
+        VALUES (?, ?, ?, ?, ?)
+    `;
+
+    db.query(sql, [name, time, day, subject_id, teacher_id], (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: "Class added successfully" });
+    });
+};
+
+// 4️⃣ UPDATE class
+exports.updateClass = (req, res) => {
+    const sql = `
+        UPDATE class
+        SET class_name=?, class_time=?, class_day=?, subject_id=?, teacher_id=?
+        WHERE class_id=?
+    `;
+
+    const { name, time, day, subject_id, teacher_id } = req.body;
+
+    db.query(
+        sql,
+        [name, time, day, subject_id, teacher_id, req.params.id],
+        (err) => {
+            if (err) return res.status(500).json(err);
+            res.json({ message: "Class updated" });
+        }
     );
-    res.json(r.rows[0]);
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
 };
 
-// ================= ADD CLASS =================
-exports.addClass = async (req, res) => {
-  const { name, time, day, subject_id, teacher_id } = req.body;
-  let conn;
-
-  try {
-    conn = await oracledb.getConnection(db);
-    await conn.execute(`
-      INSERT INTO CLASS (
-        CLASS_ID, CLASS_NAME, CLASS_TIME, CLASS_DAY,
-        SUBJECT_ID, TEACHER_ID
-      )
-      VALUES (
-        :id, :name, :time, :day, :subject_id, :teacher_id
-      )
-    `, {
-      id: req.body.id,               // contoh: C07
-      name,
-      time,
-      day,
-      subject_id: Number(subject_id),
-      teacher_id: Number(teacher_id)
-    }, { autoCommit: true });
-
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
-};
-
-// ================= UPDATE CLASS =================
-exports.updateClass = async (req, res) => {
-  const { name, time, day, subject_id, teacher_id } = req.body;
-  let conn;
-
-  try {
-    conn = await oracledb.getConnection(db);
-    await conn.execute(`
-      UPDATE CLASS SET
-        CLASS_NAME = :name,
-        CLASS_TIME = :time,
-        CLASS_DAY  = :day,
-        SUBJECT_ID = :subject_id,
-        TEACHER_ID = :teacher_id
-      WHERE CLASS_ID = :id
-    `, {
-      id: req.params.id,             // 🔥 STRING
-      name,
-      time,
-      day,
-      subject_id: Number(subject_id),
-      teacher_id: Number(teacher_id)
-    }, { autoCommit: true });
-
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
-};
-
-// ================= DELETE CLASS =================
-exports.deleteClass = async (req, res) => {
-  let conn;
-  try {
-    conn = await oracledb.getConnection(db);
-    await conn.execute(
-      `DELETE FROM CLASS WHERE CLASS_ID = :id`,
-      { id: req.params.id },   // 🔥 STRING
-      { autoCommit: true }
+// 5️⃣ DELETE class
+exports.deleteClass = (req, res) => {
+    db.query(
+        "DELETE FROM class WHERE class_id = ?",
+        [req.params.id],
+        (err) => {
+            if (err) return res.status(500).json(err);
+            res.json({ message: "Class deleted" });
+        }
     );
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
 };
 
-// ================= PREREQUISITE =================
+// ===============================
+// 🔁 PREREQUISITE (RECURSIVE LOGIC)
+// ===============================
 
-// GET PREREQUISITE
-exports.getPrerequisites = async (req, res) => {
-  let conn;
-  try {
-    conn = await oracledb.getConnection(db);
-    const r = await conn.execute(`
-      SELECT
-        cp.PREREQUISITE_ID,
-        cp.PREREQUISITE_CLASS_ID,
-        c.CLASS_NAME
-      FROM CLASS_PREREQUISITE cp
-      JOIN CLASS c
-        ON cp.PREREQUISITE_CLASS_ID = c.CLASS_ID
-      WHERE cp.CLASS_ID = :id
-    `, { id: req.params.id });
+// 6️⃣ GET class + prerequisites
+exports.getClassListWithPrereq = (req, res) => {
+    const sql = `
+        SELECT 
+            c.class_id,
+            c.class_name,
+            p.prerequisite_class_id,
+            pc.class_name AS prerequisite_name
+        FROM class c
+        LEFT JOIN class_prerequisite p 
+            ON c.class_id = p.class_id
+        LEFT JOIN class pc
+            ON p.prerequisite_class_id = pc.class_id
+        ORDER BY c.class_id
+    `;
 
-    res.json(r.rows);
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
+    db.query(sql, (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result);
+    });
 };
 
-// ADD PREREQUISITE
-exports.addPrerequisite = async (req, res) => {
-  let conn;
-  try {
-    conn = await oracledb.getConnection(db);
-    await conn.execute(`
-      INSERT INTO CLASS_PREREQUISITE
-      (PREREQUISITE_ID, CLASS_ID, PREREQUISITE_CLASS_ID)
-      VALUES (class_prereq_seq.NEXTVAL, :class_id, :pre_id)
-    `, {
-      class_id: req.params.id,                     // 🔥 STRING
-      pre_id: req.body.prerequisite_class_id       // 🔥 STRING
-    }, { autoCommit: true });
+// 7️⃣ GET prerequisites of a class
+exports.getPrerequisites = (req, res) => {
+    const sql = `
+        SELECT cp.prereq_id, c.class_id, c.class_name
+        FROM class_prerequisite cp
+        JOIN class c ON cp.prerequisite_class_id = c.class_id
+        WHERE cp.class_id = ?
+    `;
 
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
+    db.query(sql, [req.params.id], (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result);
+    });
 };
 
-// DELETE PREREQUISITE
-exports.deletePrerequisite = async (req, res) => {
-  let conn;
-  try {
-    conn = await oracledb.getConnection(db);
-    await conn.execute(
-      `DELETE FROM CLASS_PREREQUISITE WHERE PREREQUISITE_ID = :id`,
-      { id: req.params.pid },
-      { autoCommit: true }
+// 8️⃣ ADD prerequisite
+exports.addPrerequisite = (req, res) => {
+    const { prerequisite_class_id } = req.body;
+
+    const sql = `
+        INSERT INTO class_prerequisite (class_id, prerequisite_class_id)
+        VALUES (?, ?)
+    `;
+
+    db.query(sql, [req.params.id, prerequisite_class_id], (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: "Prerequisite added" });
+    });
+};
+
+// 9️⃣ DELETE prerequisite
+exports.deletePrerequisite = (req, res) => {
+    db.query(
+        "DELETE FROM class_prerequisite WHERE prereq_id = ?",
+        [req.params.pid],
+        (err) => {
+            if (err) return res.status(500).json(err);
+            res.json({ message: "Prerequisite removed" });
+        }
     );
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
-};
-
-// ================= CLASS LIST + PREREQUISITE (DISPLAY) =================
-exports.getClassListWithPrereq = async (req, res) => {
-  let conn;
-  try {
-    conn = await oracledb.getConnection(db);
-
-    const r = await conn.execute(`
-      SELECT
-        c.CLASS_ID,
-        c.CLASS_NAME,
-        c.CLASS_TIME,
-        c.CLASS_DAY,
-        s.SUBJECT_NAME,
-        t.TEACHER_NAME,
-        LISTAGG(cp.PREREQUISITE_CLASS_ID, ', ')
-          WITHIN GROUP (ORDER BY cp.PREREQUISITE_CLASS_ID)
-          AS PREREQUISITES
-      FROM CLASS c
-      JOIN SUBJECT s ON c.SUBJECT_ID = s.SUBJECT_ID
-      JOIN TEACHER t ON c.TEACHER_ID = t.TEACHER_ID
-      LEFT JOIN CLASS_PREREQUISITE cp
-        ON c.CLASS_ID = cp.CLASS_ID
-      GROUP BY
-        c.CLASS_ID, c.CLASS_NAME, c.CLASS_TIME, c.CLASS_DAY,
-        s.SUBJECT_NAME, t.TEACHER_NAME
-      ORDER BY c.CLASS_ID
-    `);
-
-    res.json(r.rows);
-
-  } catch (e) {
-    console.error("getClassListWithPrereq:", e);
-    res.status(500).json(e);
-  } finally {
-    if (conn) await conn.close();
-  }
 };

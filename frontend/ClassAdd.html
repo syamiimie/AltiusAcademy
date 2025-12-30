@@ -1,47 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Altius Academy | Add New Class</title>
+    <title>Add New Class</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .search-results{
+            position:absolute;
+            background:#fff;
+            border:1px solid #ccc;
+            width:100%;
+            max-height:150px;
+            overflow-y:auto;
+            z-index:10;
+        }
+        .search-results div{
+            padding:6px;
+            cursor:pointer;
+        }
+        .search-results div:hover{
+            background:#eee;
+        }
+    </style>
 </head>
 
 <body>
 
-<header class="top-bar">
-    <div class="logo">
-        <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
-        </a>
-    </div>
-
-    <nav class="nav-menu">
-        <a href="TeacherList.html">Teacher</a>
-        <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
-        <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html" class="active">Subject</a>
-        <a href="report.html">Report</a>
-    </nav>
-
-    <!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
-        <button class="button" onclick="logout()">Logout</button>
-        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
-    </div>
-
-</header>
-
 <main class="content">
 <form id="classForm">
 <table class="form">
+
+<tr><td colspan="2" class="titles">Add New Class</td></tr>
+
 <tr>
-    <td class="avatar" colspan="2" style="text-align:center;">🏫</td>
-</tr>
-<tr>
-    <td class="titles" colspan="2">Add New Class</td>
+    <td>Class ID:</td>
+    <td><input id="Class_ID" required placeholder="C201"></td>
 </tr>
 
 <tr>
@@ -70,15 +64,68 @@
 </tr>
 
 <tr>
+    <td>Prerequisite Class:</td>
+    <td style="position:relative;">
+        <input id="prereqSearch" placeholder="Search class code">
+        <div id="searchResults" class="search-results"></div>
+        <ul id="prereqList"></ul>
+    </td>
+</tr>
+
+<tr>
     <td colspan="2" style="text-align:center;">
         <button class="button">Save</button>
     </td>
 </tr>
+
 </table>
 </form>
 </main>
 
 <script>
+const prereqClasses = [];
+const searchInput = document.getElementById("prereqSearch");
+const resultsBox = document.getElementById("searchResults");
+const prereqList = document.getElementById("prereqList");
+
+searchInput.addEventListener("input", () => {
+    const q = searchInput.value.trim();
+    resultsBox.innerHTML = "";
+    if(!q) return;
+
+    fetch(`http://localhost:3000/classes/search?q=${q}`)
+        .then(r => r.json())
+        .then(data => {
+            data.forEach(c => {
+                const div = document.createElement("div");
+                div.textContent = `${c.class_id} - ${c.class_name}`;
+                div.onclick = () => addPrereq(c.class_id);
+                resultsBox.appendChild(div);
+            });
+        });
+});
+
+function addPrereq(id){
+    if(prereqClasses.includes(id)) return;
+
+    prereqClasses.push(id);
+    const li = document.createElement("li");
+    li.textContent = id + " ";
+
+    const btn = document.createElement("button");
+    btn.textContent = "❌";
+    btn.onclick = () => {
+        prereqClasses.splice(prereqClasses.indexOf(id),1);
+        li.remove();
+    };
+
+    li.appendChild(btn);
+    prereqList.appendChild(li);
+
+    searchInput.value = "";
+    resultsBox.innerHTML = "";
+}
+
 document.getElementById("classForm").onsubmit = e => {
     e.preventDefault();
 
@@ -86,29 +133,19 @@ document.getElementById("classForm").onsubmit = e => {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify({
+            id: Class_ID.value.trim(),
             name: Class_Name.value.trim(),
             time: Class_Time.value.trim(),
             day: Class_Day.value.trim(),
             subject_id: Class_Subjects.value.trim(),
-            teacher_id: Class_Teacher.value.trim()
+            teacher_id: Class_Teacher.value.trim(),
+            prerequisites: prereqClasses
         })
     }).then(()=>{
         alert("Class added");
         location.href="ClassList.html";
     });
 };
-
-function goStaffHome(){
-    const staff = localStorage.getItem("staff");
-
-    if(!staff){
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
-
-    window.location.href = "StaffHomepage.html";
-}
 </script>
 
 </body>
