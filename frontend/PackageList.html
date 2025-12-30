@@ -56,8 +56,6 @@ fetch("http://localhost:3000/packages")
             <h3 class="package-title">${p.PACKAGE_NAME}</h3>
             <p><strong>Fee:</strong> RM ${p.PACKAGE_FEE}</p>
             <p><strong>Duration:</strong> ${p.DURATION}</p>
-            <p><strong>Subjects:</strong> ${p.SUBJECTS}</p>
-
             <div class="card-actions">
                 <a href="PackageEdit.html?id=${p.PACKAGE_ID}" class="button">Edit</a>
                 <button class="button" onclick="del(${p.PACKAGE_ID})">Delete</button>

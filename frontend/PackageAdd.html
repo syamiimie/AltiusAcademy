@@ -59,11 +59,10 @@ document.querySelector("form").addEventListener("submit", e => {
     fetch("http://localhost:3000/packages", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
-            name: Package_Name.value.trim(),
-            fee: Package_Fee.value,
-            duration: Duration.value.trim(),
-            subjects: Subjects.value.trim()
+        body: JSON.stringify({
+        name: Package_Name.value.trim(),
+        fee: Package_Fee.value,
+        duration: Duration.value.trim()
         })
     }).then(()=>{
         alert("Package added");
