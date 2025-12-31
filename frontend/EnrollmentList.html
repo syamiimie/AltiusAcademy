@@ -51,7 +51,7 @@ fetch("http://localhost:3000/enrollments")
 
         if (!grouped[id]) {
             grouped[id] = {
-                enrollId: e.ENROLL_ID,   // ⭐ THIS IS THE KEY FIX
+                enrollId: e.ENROLL_ID,   
                 studentName: e.STUDENT_NAME,
                 status: e.ENROLL_STATUS,
                 packages: new Set(),

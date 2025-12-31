@@ -26,87 +26,114 @@
     </nav>
 </header>
 
-<form id="editForm" class="form">
-    <h2 class="titles">Edit Enrollment</h2>
-
-    <label>Student</label>
-    <select id="studentSelect" class="select-class" required></select>
-
-    <label>Package</label>
-    <select id="packageSelect" class="select-class" required></select>
-
-    <label>Status</label>
-    <select id="statusSelect" class="select-class">
-        <option value="Active">Active</option>
-        <option value="Inactive">Inactive</option>
-        <option value="Completed">Completed</option>
-    </select>
-
-    <div class="card-actions">
-        <button class="button" type="submit">Update</button>
-        <a href="EnrollmentList.html" class="button">Cancel</a>
-    </div>
-</form>
+<main class="content">
+    <h2 class="titles">Edit Student Enrollments</h2>
+    <div id="enrollmentCards"></div>
+</main>
 
 <script>
 const params = new URLSearchParams(window.location.search);
-const enrollId = params.get("id");
+const studentId = params.get("studentId");
 
-const studentSelect = document.getElementById("studentSelect");
-const packageSelect = document.getElementById("packageSelect");
-const statusSelect  = document.getElementById("statusSelect");
+const container = document.getElementById("enrollmentCards");
 
-/* ===== LOAD DROPDOWNS ===== */
+let students = [];
+let packages = [];
+
+/* ===== LOAD MASTER DATA ===== */
 Promise.all([
     fetch("http://localhost:3000/students").then(r => r.json()),
-    fetch("http://localhost:3000/packages").then(r => r.json())
-]).then(([students, packages]) => {
+    fetch("http://localhost:3000/packages").then(r => r.json()),
+    fetch("http://localhost:3000/enrollments").then(r => r.json())
+]).then(([stu, pack, enrollments]) => {
 
-    studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
-    students.forEach(s =>
-        studentSelect.innerHTML +=
-        `<option value="${s.STUDENT_ID}">${s.STUDENT_NAME}</option>`
+    students = stu;
+    packages = pack;
+
+    const studentEnrollments = enrollments.filter(
+        e => e.STUDENT_ID == studentId
     );
 
-    packageSelect.innerHTML = `<option value="">-- Select Package --</option>`;
-    packages.forEach(p =>
-        packageSelect.innerHTML +=
-        `<option value="${p.PACKAGE_ID}">${p.PACKAGE_NAME}</option>`
-    );
+    if (studentEnrollments.length === 0) {
+        container.innerHTML = "<p>No enrollments found.</p>";
+        return;
+    }
+
+    studentEnrollments.forEach(e => renderEnrollmentCard(e));
 });
 
-/* ===== LOAD ENROLLMENT DATA ===== */
-fetch(`http://localhost:3000/enrollments/${enrollId}`)
-.then(r => r.json())
-.then(data => {
-    const e = data[0];
+/* ===== RENDER CARD ===== */
+function renderEnrollmentCard(e) {
 
-    studentSelect.value = e.STUDENT_ID;
-    packageSelect.value = e.PACKAGE_ID;
-    statusSelect.value  = e.ENROLL_STATUS;
-});
+    const studentName =
+        students.find(s => s.STUDENT_ID == e.STUDENT_ID)?.STUDENT_NAME || "-";
 
-/* ===== UPDATE ENROLLMENT ===== */
-document.getElementById("editForm").addEventListener("submit", e => {
-    e.preventDefault();
+    let studentOptions = students.map(s =>
+        `<option value="${s.STUDENT_ID}" ${s.STUDENT_ID == e.STUDENT_ID ? "selected" : ""}>
+            ${s.STUDENT_NAME}
+        </option>`
+    ).join("");
+
+    let packageOptions = packages.map(p =>
+        `<option value="${p.PACKAGE_ID}" ${p.PACKAGE_NAME == e.PACKAGE_NAME ? "selected" : ""}>
+            ${p.PACKAGE_NAME}
+        </option>`
+    ).join("");
+
+    container.innerHTML += `
+        <form class="form" onsubmit="updateEnrollment(event, ${e.ENROLL_ID})">
+
+            <h3>${studentName} — Enrollment #${e.ENROLL_ID}</h3>
+
+            <label>Student</label>
+            <select class="select-class" disabled>
+                ${studentOptions}
+            </select>
+
+            <label>Package</label>
+            <select class="select-class" data-package>
+                ${packageOptions}
+            </select>
+
+            <label>Status</label>
+            <select class="select-class" data-status>
+                <option value="Active" ${e.ENROLL_STATUS === "Active" ? "selected" : ""}>Active</option>
+                <option value="Inactive" ${e.ENROLL_STATUS === "Inactive" ? "selected" : ""}>Inactive</option>
+                <option value="Completed" ${e.ENROLL_STATUS === "Completed" ? "selected" : ""}>Completed</option>
+            </select>
+
+            <div class="card-actions">
+                <button class="button" type="submit">Update</button>
+                <a href="EnrollmentList.html" class="button">Back</a>
+            </div>
+
+        </form>
+    `;
+}
+
+/* ===== UPDATE ===== */
+function updateEnrollment(event, enrollId) {
+    event.preventDefault();
+
+    const form = event.target;
+    const packageId = form.querySelector("[data-package]").value;
+    const status = form.querySelector("[data-status]").value;
 
     fetch(`http://localhost:3000/enrollments/${enrollId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            Student_ID: studentSelect.value,
-            Package_ID: packageSelect.value,
-            Enroll_Date: null,          // optional, controller requires it
-            Enroll_Status: statusSelect.value
+            Package_ID: packageId,
+            Enroll_Date: null,
+            Enroll_Status: status
         })
     })
     .then(res => {
-        if (!res.ok) throw new Error("Failed to update enrollment");
+        if (!res.ok) throw new Error("Update failed");
         alert("Enrollment updated successfully");
-        location.href = "EnrollmentList.html";
     })
     .catch(err => alert(err.message));
-});
+}
 </script>
 
 </body>
