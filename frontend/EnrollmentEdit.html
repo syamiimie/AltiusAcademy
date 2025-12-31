@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Edit Enrollment</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png">
+        </a>
+    </div>
+</header>
+
+<main class="content">
+
+<div class="form">
+    <h2 class="titles">Edit Enrollment</h2>
+
+    <p><b>Student:</b> <span id="studentName">-</span></p>
+    <p><b>Class:</b> <span id="className">-</span></p>
+    <p><b>Package:</b> <span id="packageName">-</span></p>
+
+    <label>Enrollment Status</label>
+    <select id="status">
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Completed">Completed</option>
+    </select>
+
+    <div class="card-actions">
+        <button class="button" onclick="update()">Update</button>
+        <a href="EnrollmentList.html" class="button">Cancel</a>
+    </div>
+</div>
+
+</main>
+
+<script>
+    // Fetch students, classes, packages to populate dropdowns
+    async function loadData() {
+      const [students, classes, packages] = await Promise.all([
+        fetch("/students").then(r => r.json()),
+        fetch("/classes").then(r => r.json()),
+        fetch("/packages").then(r => r.json())
+      ]);
+
+      const studentSelect = document.getElementById("student");
+      students.forEach(s => {
+        studentSelect.innerHTML += `<option value="${s.STUDENT_ID}">${s.STUDENT_NAME}</option>`;
+      });
+
+      const classSelect = document.getElementById("class");
+      classes.forEach(c => {
+        classSelect.innerHTML += `<option value="${c.CLASS_ID}">${c.CLASS_NAME}</option>`;
+      });
+
+      const packageSelect = document.getElementById("package");
+      packages.forEach(p => {
+        packageSelect.innerHTML += `<option value="${p.PACKAGE_ID}">${p.PACKAGE_NAME}</option>`;
+      });
+    }
+
+    loadData();
+
+    // Handle form submit
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const student_id = document.getElementById("student").value;
+      const class_id = document.getElementById("class").value;
+      const package_id = document.getElementById("package").value;
+      const status = document.getElementById("status").value;
+
+      try {
+        const res = await fetch("/enrollments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ student_id, class_id, package_id, status })
+        });
+
+        if (res.ok) {
+          alert("Enrollment added successfully!");
+        } else {
+          const err = await res.json();
+          alert("Error: " + err.error);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Unexpected error occurred!");
+      }
+    });
+  </script>
+</body>
+</html>
+

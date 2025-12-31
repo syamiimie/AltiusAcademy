@@ -20,6 +20,9 @@ app.use("/packages", require("./routes/package.routes"));
 app.use("/classes", require("./routes/class.routes"));
 app.use("/subjects", require("./routes/subject.routes"));
 app.use("/reports", reportRoutes);
+app.use("/enrollments", require("./routes/enrollment.routes"));
+
+
 
 
 app.listen(PORT, () => {

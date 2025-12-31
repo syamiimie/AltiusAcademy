@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Add Enrollment</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="EnrollmentList.html" class="active">Enrollment</a>
+        <a href="PackageList.html">Package</a>
+        <a href="SubjectList.html">Subject</a>
+        <a href="report.html">Report</a>
+    </nav>
+</header>
+
+<form id="enrollForm" class="form">
+    <h2 class="titles">Add Enrollment</h2>
+
+    <label>Student</label>
+    <select id="studentSelect" class="select-class" required></select>
+
+    <label>Package</label>
+    <select id="packageSelect" class="select-class" required></select>
+
+    <label>Subject</label>
+    <select id="subjectSelect" class="select-class" required></select>
+
+    <label>Class</label>
+    <select id="classSelect" class="select-class" required></select>
+
+    <label>Status</label>
+    <select id="statusSelect" class="select-class">
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+    </select>
+
+    <div class="card-actions">
+        <button class="button" type="submit">Save</button>
+        <a href="EnrollmentList.html" class="button">Cancel</a>
+    </div>
+</form>
+
+<script>
+const studentSelect = document.getElementById("studentSelect");
+const packageSelect = document.getElementById("packageSelect");
+const subjectSelect = document.getElementById("subjectSelect");
+const classSelect   = document.getElementById("classSelect");
+const statusSelect  = document.getElementById("statusSelect");
+
+let subjects = [];
+let classes  = [];
+
+/* ===== LOAD DATA ===== */
+Promise.all([
+    fetch("http://localhost:3000/students").then(r => r.json()),
+    fetch("http://localhost:3000/packages").then(r => r.json()),
+    fetch("http://localhost:3000/subjects").then(r => r.json()),
+    fetch("http://localhost:3000/classes").then(r => r.json())
+]).then(([students, packages, subs, cls]) => {
+
+    subjects = subs;
+    classes = cls;
+
+    studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
+    students.forEach(s =>
+        studentSelect.innerHTML +=
+        `<option value="${s.STUDENT_ID}">${s.STUDENT_NAME}</option>`
+    );
+
+    packageSelect.innerHTML = `<option value="">-- Select Package --</option>`;
+    packages.forEach(p =>
+        packageSelect.innerHTML +=
+        `<option value="${p.PACKAGE_ID}">${p.PACKAGE_NAME}</option>`
+    );
+});
+
+/* ===== FILTER SUBJECT BY PACKAGE ===== */
+packageSelect.addEventListener("change", () => {
+    subjectSelect.innerHTML = `<option value="">-- Select Subject --</option>`;
+    classSelect.innerHTML   = `<option value="">-- Select Class --</option>`;
+
+    subjects
+      .filter(s => s.PACKAGE_ID == packageSelect.value)
+      .forEach(s =>
+        subjectSelect.innerHTML +=
+        `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`
+      );
+});
+
+/* ===== FILTER CLASS BY SUBJECT ===== */
+subjectSelect.addEventListener("change", () => {
+    classSelect.innerHTML = `<option value="">-- Select Class --</option>`;
+
+    classes
+      .filter(c => c.SUBJECT_ID == subjectSelect.value)
+      .forEach(c =>
+        classSelect.innerHTML +=
+        `<option value="${c.CLASS_ID}">${c.CLASS_NAME}</option>`
+      );
+});
+
+/* ===== SUBMIT (ONLY PACKAGE_ID IS SAVED) ===== */
+document.getElementById("enrollForm").addEventListener("submit", e => {
+    e.preventDefault();
+
+    fetch("http://localhost:3000/enrollments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            Student_ID: studentSelect.value,
+            Package_ID: packageSelect.value,
+            Enroll_Status: statusSelect.value
+        })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Failed to add enrollment");
+        alert("Enrollment added successfully");
+        location.href = "EnrollmentList.html";
+    })
+    .catch(err => alert(err.message));
+});
+</script>
+
+</body>
+</html>

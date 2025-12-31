@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Enrollment</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="EnrollmentList.html" class="active">Enrollment</a>
+        <a href="PackageList.html">Package</a>
+        <a href="SubjectList.html">Subject</a>
+        <a href="report.html">Report</a>
+    </nav>
+</header>
+
+<main class="content">
+
+    <div class="section-header">
+        <h2 class="page-title">Student Enrollments</h2>
+        <a href="EnrollmentAdd.html" class="button add-button">Add</a>
+    </div>
+
+    <div class="enrollcard-container" id="enrollCards"></div>
+
+</main>
+
+<script>
+fetch("http://localhost:3000/enrollments")
+.then(res => res.json())
+.then(data => {
+    const container = document.getElementById("enrollCards");
+    container.innerHTML = "";
+
+    const grouped = {};
+
+    data.forEach(e => {
+        const id = e.STUDENT_ID || e.student_id || e.STUDENT_NAME;
+
+        if (!grouped[id]) {
+            grouped[id] = {
+                studentName: e.STUDENT_NAME,
+                status: e.ENROLL_STATUS,
+                packages: new Set(),
+                classes: []
+            };
+        }
+
+        // DISTINCT package
+        if (e.PACKAGE_NAME) {
+            grouped[id].packages.add(e.PACKAGE_NAME);
+        }
+
+        grouped[id].classes.push({
+            classId: e.CLASS_ID || "-",
+            className: e.CLASS_NAME,
+            time: e.CLASS_TIME,
+            day: e.CLASS_DAY,
+            subject: e.SUBJECT_NAME,
+            teacher: e.TEACHER_NAME
+        });
+    });
+
+    Object.values(grouped).forEach(student => {
+        const packageText = [...student.packages].join(", ") || "N/A";
+
+        let rows = "";
+        student.classes.forEach(c => {
+            rows += `
+                <tr>
+                    <td>${c.classId}</td>
+                    <td>${c.className}</td>
+                    <td>${c.time}</td>
+                    <td>${c.day}</td>
+                    <td>${c.subject}</td>
+                    <td>${c.teacher}</td>
+                </tr>
+            `;
+        });
+
+        container.innerHTML += `
+            <div class="card">
+                <div class="card-header">
+                    <h3>${student.studentName}</h3>
+                    <span class="badge active">${student.status}</span>
+                </div>
+
+                <p><b>Package:</b> ${packageText}</p>
+
+                <h4>Class:</h4>
+
+                <table class="class-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Class Name</th>
+                            <th>Time</th>
+                            <th>Day</th>
+                            <th>Subject</th>
+                            <th>Teacher</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+
+                <div class="payment-title">
+                    <a href="#" style="color: aquamarine;">Payment Details</a>
+                </div>
+
+                <div class="card-actions">
+                    <button class="button">Edit</button>
+                    <button class="button">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+});
+</script>
+
+</body>
+</html>
