@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Attendance</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<main class="content">
+<form>
+<table class="form">
+<tr><td class="titles" colspan="2">Edit Attendance</td></tr>
+
+<tr><td>Date:</td><td><input type="date" id="date"></td></tr>
+
+<tr>
+<td>Status:</td>
+<td>
+<select id="status">
+  <option value="Present">Present</option>
+  <option value="Absent">Absent</option>
+</select>
+</td>
+</tr>
+
+<tr><td>Student ID:</td><td><input id="student"></td></tr>
+<tr><td>Class ID:</td><td><input id="class"></td></tr>
+
+<tr><td colspan="2" align="center">
+<button class="button">Update</button>
+</td></tr>
+</table>
+</form>
+</main>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+fetch(`http://localhost:3000/attendance/${id}`)
+.then(res=>res.json())
+.then(a=>{
+  date.value = a.ATTEND_DATE.split("T")[0];
+  status.value = a.ATTEND_STATUS;
+  student.value = a.STUDENT_ID;
+  document.getElementById("class").value = a.CLASS_ID;
+});
+
+document.querySelector("form").onsubmit = e => {
+  e.preventDefault();
+
+  fetch(`http://localhost:3000/attendance/${id}`,{
+    method:"PUT",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      attend_date: date.value,
+      attend_status: status.value,
+      student_id: student.value,
+      class_id: document.getElementById("class").value
+    })
+  }).then(()=>{
+    alert("Attendance updated");
+    location.href="AttendanceList.html";
+  });
+};
+</script>
+</body>
+</html>
