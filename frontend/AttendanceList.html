@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Altius Academy | Attendance List</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="top-bar">
+  <div class="logo">
+    <a href="StaffHomepage.html">
+      <img src="images/logo1.png" alt="Altius Academy">
+    </a>
+  </div>
+
+  <nav class="nav-menu">
+    <a href="TeacherList.html">Teacher</a>
+    <a href="StudentList.html">Student</a>
+    <a href="ClassList.html">Class</a>
+    <a href="PackageList.html">Package</a>
+    <a href="AttendanceList.html" class="active">Attendance</a>
+    <a href="report.html">Report</a>
+  </nav>
+
+  <!-- USER ICON -->
+  <div class="user-icon" onclick="goStaffHome()" style="cursor:pointer;">
+    👤
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+<table border="1" class="section">
+<thead>
+<tr>
+  <td class="titles" colspan="6">Attendance List</td>
+  <td class="action-cell">
+    <a href="AttendanceAdd.html" class="button">Add</a>
+  </td>
+</tr>
+
+<tr>
+  <th>ID</th>
+  <th>Date</th>
+  <th>Status</th>
+  <th>Student ID</th>
+  <th>Class ID</th>
+  <th>Report ID</th>
+  <th>Action</th>
+</tr>
+</thead>
+
+<tbody id="attendanceTable">
+<!-- DATA FROM API -->
+</tbody>
+</table>
+
+</main>
+
+<script>
+/* 🔐 LOGIN CHECK */
+if (!localStorage.getItem("staff")) {
+  alert("Please login first");
+  window.location.href = "login.html";
+}
+
+/* LOAD ATTENDANCE DATA */
+fetch("http://localhost:3000/attendance")
+.then(res => res.json())
+.then(data => {
+  const table = document.getElementById("attendanceTable");
+  table.innerHTML = "";
+
+  data.forEach(a => {
+    const date = a.ATTEND_DATE
+      ? new Date(a.ATTEND_DATE).toLocaleDateString()
+      : "-";
+
+    table.innerHTML += `
+      <tr>
+        <td>${a.ATTEND_ID}</td>
+        <td>${date}</td>
+        <td>${a.ATTEND_STATUS ?? "-"}</td>
+        <td>${a.STUDENT_ID ?? "-"}</td>
+        <td>${a.CLASS_ID ?? "-"}</td>
+        <td>${a.ATTENDREPORT_ID ?? "-"}</td>
+        <td class="action-cell">
+          <a href="AttendanceEdit.html?id=${a.ATTEND_ID}" class="button">Edit</a>
+          <button class="button" onclick="del(${a.ATTEND_ID})">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+})
+.catch(err => {
+  console.error(err);
+  alert("Failed to load attendance data");
+});
+
+/* DELETE */
+function del(id){
+  if(confirm("Delete this attendance record?")){
+    fetch(`http://localhost:3000/attendance/${id}`, {
+      method: "DELETE"
+    }).then(() => location.reload());
+  }
+}
+
+/* GO STAFF HOME */
+function goStaffHome(){
+  window.location.href = "StaffHomepage.html";
+}
+</script>
+
+</body>
+</html>

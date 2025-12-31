@@ -4,6 +4,7 @@ const cors = require("cors");
 const studentRoutes = require("./routes/student.routes");
 const staffRoutes = require("./routes/staff.routes");
 const reportRoutes = require("./routes/report.routes");
+const attendanceRoutes = require("./routes/attendance.routes");
 
 const app = express();
 const PORT = 3000;
@@ -20,8 +21,12 @@ app.use("/packages", require("./routes/package.routes"));
 app.use("/classes", require("./routes/class.routes"));
 app.use("/subjects", require("./routes/subject.routes"));
 app.use("/reports", reportRoutes);
+<<<<<<< Updated upstream
 app.use("/enrollments", require("./routes/enrollment.routes"));
 
+=======
+app.use("/attendance", attendanceRoutes);
+>>>>>>> Stashed changes
 
 
 
