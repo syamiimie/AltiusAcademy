@@ -9,7 +9,6 @@
 
 <body>
 
-<!-- ================= HEADER ================= -->
 <header class="top-bar">
     <div class="logo">
         <a href="StaffHomepage.html">
@@ -32,47 +31,35 @@
     </div>
 </header>
 
-<!-- ================= CONTENT ================= -->
 <main class="content">
 <form id="classForm">
 <table class="form">
 
+<tr><td class="avatar" colspan="2" style="text-align:center;">🏫</td></tr>
+<tr><td class="titles" colspan="2">Add New Class</td></tr>
+
+<tr><td>Name:</td><td><input id="Class_Name" required></td></tr>
+<tr><td>Time:</td><td><input id="Class_Time" required></td></tr>
+<tr><td>Day:</td><td><input id="Class_Day" required></td></tr>
+
 <tr>
-    <td class="avatar" colspan="2" style="text-align:center;">🏫</td>
+    <td>Subject:</td>
+    <td>
+        <select id="Class_Subjects" required>
+            <option value="">-- Select Subject --</option>
+        </select>
+    </td>
 </tr>
 
 <tr>
-    <td class="titles" colspan="2">Add New Class</td>
+    <td>Teacher:</td>
+    <td>
+        <select id="Class_Teacher" required>
+            <option value="">-- Select Teacher --</option>
+        </select>
+    </td>
 </tr>
 
-<!-- Removed Class ID row because it's auto-generated -->
-
-<tr>
-    <td>Name:</td>
-    <td><input id="Class_Name" required></td>
-</tr>
-
-<tr>
-    <td>Time:</td>
-    <td><input id="Class_Time" required></td>
-</tr>
-
-<tr>
-    <td>Day:</td>
-    <td><input id="Class_Day" required></td>
-</tr>
-
-<tr>
-    <td>Subject ID:</td>
-    <td><input id="Class_Subjects" required></td>
-</tr>
-
-<tr>
-    <td>Teacher ID:</td>
-    <td><input id="Class_Teacher" required></td>
-</tr>
-
-<!-- ================= PREREQUISITE SEARCH ================= -->
 <tr>
     <td>Prerequisite Class:</td>
     <td>
@@ -93,7 +80,7 @@
 </main>
 
 <script>
-/* ================= GLOBAL ================= */
+const API = "http://localhost:3000";
 const selectedPrereqs = [];
 
 const form = document.getElementById("classForm");
@@ -101,96 +88,95 @@ const searchInput = document.getElementById("searchPrereq");
 const searchResult = document.getElementById("searchResult");
 const selectedPrereqList = document.getElementById("selectedPrereq");
 
-/* ================= SEARCH CLASSES ================= */
-searchInput.addEventListener("input", async e => {
+/* LOAD SUBJECTS */
+fetch(`${API}/subjects`)
+.then(r=>r.json())
+.then(data=>{
+    data.forEach(s=>{
+        Class_Subjects.innerHTML +=
+            `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
+    });
+});
+
+/* LOAD TEACHERS */
+fetch(`${API}/teachers`)
+.then(r=>r.json())
+.then(data=>{
+    data.forEach(t=>{
+        Class_Teacher.innerHTML +=
+            `<option value="${t.TEACHER_ID}">${t.TEACHER_NAME}</option>`;
+    });
+});
+
+/* SEARCH PREREQ */
+searchInput.addEventListener("input", async e=>{
     const keyword = e.target.value.trim();
-    searchResult.innerHTML = "";
+    searchResult.innerHTML="";
+    if(!keyword) return;
 
-    if (!keyword) return;
-
-    const res = await fetch("http://localhost:3000/classes");
+    const res = await fetch(`${API}/classes`);
     const classes = await res.json();
 
-    const filtered = classes.filter(c =>
+    classes.filter(c =>
         c.CLASS_ID.toLowerCase().includes(keyword.toLowerCase()) ||
         c.CLASS_NAME.toLowerCase().includes(keyword.toLowerCase())
-    );
-
-    filtered.forEach(c => {
+    ).forEach(c=>{
         const div = document.createElement("div");
         div.textContent = `${c.CLASS_ID} - ${c.CLASS_NAME}`;
-        div.onclick = () => addPrereq(c.CLASS_ID);
+        div.onclick = ()=>addPrereq(c.CLASS_ID);
         searchResult.appendChild(div);
     });
 });
 
-/* ================= ADD PREREQUISITE ================= */
-function addPrereq(classId) {
-    if (selectedPrereqs.includes(classId)) return;
-
-    selectedPrereqs.push(classId);
+/* ADD PREREQ */
+function addPrereq(id){
+    if(selectedPrereqs.includes(id)) return;
+    selectedPrereqs.push(id);
 
     const li = document.createElement("li");
-    li.textContent = classId + " ";
+    li.textContent = id + " ";
 
     const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = "✖";
-    btn.onclick = () => {
-        selectedPrereqs.splice(selectedPrereqs.indexOf(classId), 1);
+    btn.type="button";
+    btn.textContent="✖";
+    btn.onclick=()=>{
+        selectedPrereqs.splice(selectedPrereqs.indexOf(id),1);
         li.remove();
     };
 
     li.appendChild(btn);
     selectedPrereqList.appendChild(li);
-
-    searchResult.innerHTML = "";
-    searchInput.value = "";
+    searchResult.innerHTML="";
+    searchInput.value="";
 }
 
-/* ================= SUBMIT FORM ================= */
-form.addEventListener("submit", async e => {
+/* SUBMIT */
+form.onsubmit = async e=>{
     e.preventDefault();
 
-    const payload = {
-        name: document.getElementById("Class_Name").value.trim(),
-        time: document.getElementById("Class_Time").value.trim(),
-        day: document.getElementById("Class_Day").value.trim(),
-        subject_id: document.getElementById("Class_Subjects").value.trim(),
-        teacher_id: document.getElementById("Class_Teacher").value.trim(),
-        prerequisites: selectedPrereqs
-    };
+    await fetch(`${API}/classes`,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+            name: Class_Name.value,
+            time: Class_Time.value,
+            day: Class_Day.value,
+            subject_id: Class_Subjects.value,
+            teacher_id: Class_Teacher.value,
+            prerequisites: selectedPrereqs
+        })
+    });
 
-    try {
-        const res = await fetch("http://localhost:3000/classes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+    alert("Class added successfully");
+    location.href="ClassList.html";
+};
 
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.message || "Failed to add class");
-        }
-
-        alert("Class added successfully");
-        window.location.href = "ClassList.html";
-
-    } catch (err) {
-        alert("Error: " + err.message);
-    }
-});
-
-/* ================= NAV ================= */
-function goStaffHome() {
-    window.location.href = "StaffHomepage.html";
-}
-
-function logout() {
+function goStaffHome(){ location.href="StaffHomepage.html"; }
+function logout(){
     localStorage.removeItem("staff");
-    window.location.href = "login.html";
+    location.href="login.html";
 }
 </script>
+
 </body>
 </html>

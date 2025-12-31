@@ -3,6 +3,7 @@
 <head>
     <title>Altius Academy | Edit Class</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -11,7 +12,7 @@
 <header class="top-bar">
     <div class="logo">
         <a href="StaffHomepage.html">
-            <img src="images/logo1.png">
+            <img src="images/logo1.png" alt="Altius Academy">
         </a>
     </div>
 
@@ -34,129 +35,192 @@
 
 <form id="classForm">
 <table class="form">
-<tr><td colspan="2" class="titles">Edit Class Details</td></tr>
+<tr>
+    <td class="titles" colspan="2">Edit Class Details</td>
+</tr>
 
-<tr><td>Name</td><td><input id="Class_Name"></td></tr>
-<tr><td>Time</td><td><input id="Class_Time"></td></tr>
-<tr><td>Day</td><td><input id="Class_Day"></td></tr>
-<tr><td>Subject ID</td><td><input id="Class_Subjects"></td></tr>
-<tr><td>Teacher ID</td><td><input id="Class_Teacher"></td></tr>
+<tr><td>Name</td><td><input id="Class_Name" required></td></tr>
+<tr><td>Time</td><td><input id="Class_Time" required></td></tr>
+<tr><td>Day</td><td><input id="Class_Day" required></td></tr>
+<tr>
+    <td>Subject</td>
+    <td>
+        <select id="Class_Subjects" required>
+            <option value="">-- Select Subject --</option>
+        </select>
+    </td>
+</tr>
+<tr>
+    <td>Teacher</td>
+    <td>
+        <select id="Class_Teacher" required>
+            <option value="">-- Select Teacher --</option>
+        </select>
+    </td>
+</tr>
 
 <tr>
-  <td colspan="2" style="text-align:center">
-    <button class="button">Update</button>
-  </td>
+    <td>Search/Add Class</td>
+    <td>
+        <input id="searchPrereq" placeholder="Search class code or name">
+        <div id="searchResult" class="dropdown"></div>
+    </td>
+</tr>
+
+<tr>
+    <td colspan="2">
+        <ul id="selectedPrereq"></ul>
+    </td>
+</tr>
+
+<tr>
+    <td colspan="2" style="text-align:center">
+        <button class="button">Update Class</button>
+    </td>
 </tr>
 </table>
 </form>
 
 <br>
 
-<table class="form">
-<tr><td colspan="2" class="titles">Prerequisite Classes</td></tr>
-
-<tr>
-  <td>Select Class</td>
-  <td>
-    <select id="preSelect"></select>
-    <button type="button" class="button" onclick="addPrereq()">Add</button>
-  </td>
-</tr>
-
-<tr>
-  <td colspan="2">
-    <ul id="preList"></ul>
-  </td>
-</tr>
-</table>
-
 </main>
 
 <script>
 const API = "http://localhost:3000";
 const id = new URLSearchParams(location.search).get("id");
+const selectedPrereqs = [];
 
-// LOAD CLASS
-fetch(`${API}/classes/${id}`)
-.then(r=>r.json())
-.then(c=>{
-  Class_Name.value = c.CLASS_NAME;
-  Class_Time.value = c.CLASS_TIME;
-  Class_Day.value = c.CLASS_DAY;
-  Class_Subjects.value = c.SUBJECT_ID;
-  Class_Teacher.value = c.TEACHER_ID;
-});
+// ===== Elements =====
+const Class_Name = document.getElementById("Class_Name");
+const Class_Time = document.getElementById("Class_Time");
+const Class_Day = document.getElementById("Class_Day");
+const Class_Subjects = document.getElementById("Class_Subjects");
+const Class_Teacher = document.getElementById("Class_Teacher");
+const searchInput = document.getElementById("searchPrereq");
+const searchResult = document.getElementById("searchResult");
+const selectedPrereqList = document.getElementById("selectedPrereq");
+const form = document.getElementById("classForm");
 
-// UPDATE
-classForm.onsubmit = e => {
-  e.preventDefault();
-  fetch(`${API}/classes/${id}`,{
-    method:"PUT",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      name: Class_Name.value,
-      time: Class_Time.value,
-      day: Class_Day.value,
-      subject_id: Class_Subjects.value,
-      teacher_id: Class_Teacher.value
-    })
-  }).then(()=>alert("Updated"));
-};
-
-// LOAD CLASSES FOR PREREQ
-fetch(`${API}/classes`)
-.then(r=>r.json())
-.then(data=>{
-  preSelect.innerHTML = "<option value=''>-- Select Class --</option>";
-  data.forEach(c=>{
-    if(c.CLASS_ID != id){
-      preSelect.innerHTML += `<option value="${c.CLASS_ID}">${c.CLASS_NAME}</option>`;
-    }
-  });
-});
-
-// LOAD PREREQ
-function loadPrereq(){
-  fetch(`${API}/classes/${id}/prerequisites`)
-  .then(r=>r.json())
-  .then(data=>{
-    preList.innerHTML="";
-    data.forEach(p=>{
-      preList.innerHTML += `<li>${p.CLASS_NAME}
-        <button onclick="removePrereq(${p.PREREQUISITE_ID})">❌</button>
-      </li>`;
+// ===== Load Subjects =====
+fetch(`${API}/subjects`).then(r=>r.json()).then(data=>{
+    data.forEach(s=>{
+        Class_Subjects.innerHTML += `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
     });
-  });
-}
+});
 
-function addPrereq(){
-  if(!preSelect.value) return;
-  fetch(`${API}/classes/${id}/prerequisites`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ prerequisite_class_id: preSelect.value })
-  }).then(loadPrereq);
-}
+// ===== Load Teachers =====
+fetch(`${API}/teachers`).then(r=>r.json()).then(data=>{
+    data.forEach(t=>{
+        Class_Teacher.innerHTML += `<option value="${t.TEACHER_ID}">${t.TEACHER_NAME}</option>`;
+    });
+});
 
-function removePrereq(pid){
-  fetch(`${API}/classes/prerequisites/${pid}`,{
-    method:"DELETE"
-  }).then(loadPrereq);
-}
+// ===== Load Class Info =====
+fetch(`${API}/classes/${id}`).then(r=>r.json()).then(c=>{
+    Class_Name.value = c.CLASS_NAME;
+    Class_Time.value = c.CLASS_TIME;
+    Class_Day.value = c.CLASS_DAY;
 
+    setTimeout(()=>{
+        Class_Subjects.value = c.SUBJECT_ID;
+        Class_Teacher.value = c.TEACHER_ID;
+    }, 200);
+});
+
+// ===== Load Existing Prerequisites =====
+function loadPrereq(){
+    selectedPrereqs.length = 0;
+    selectedPrereqList.innerHTML = "";
+
+    fetch(`${API}/classes/${id}/prerequisites`)
+    .then(r=>r.json())
+    .then(data=>{
+        data.forEach(p=>{
+            selectedPrereqs.push(p.CLASS_ID);
+
+            const li = document.createElement("li");
+            li.textContent = `${p.CLASS_NAME} `;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "✖";
+            btn.onclick = ()=>{
+                fetch(`${API}/classes/prerequisites/${p.PREREQUISITE_ID}`,{method:"DELETE"})
+                .then(()=>loadPrereq());
+            };
+
+            li.appendChild(btn);
+            selectedPrereqList.appendChild(li);
+        });
+    });
+}
 loadPrereq();
 
-function goStaffHome(){
-  if(!localStorage.getItem("staff")){
-    alert("Login first"); location.href="login.html"; return;
-  }
-  location.href="StaffHomepage.html";
-}
-function logout(){
-  localStorage.removeItem("staff");
-  location.href="login.html";
-}
-</script>
+// ===== Search Classes for Prerequisite =====
+searchInput.addEventListener("input", async e=>{
+    const keyword = e.target.value.trim();
+    searchResult.innerHTML = "";
+    if(!keyword) return;
 
+    const res = await fetch(`${API}/classes`);
+    const classes = await res.json();
+
+    classes.filter(c =>
+        c.CLASS_ID !== id &&
+        !selectedPrereqs.includes(c.CLASS_ID) &&
+        (c.CLASS_ID.toLowerCase().includes(keyword.toLowerCase()) ||
+         c.CLASS_NAME.toLowerCase().includes(keyword.toLowerCase()))
+    ).forEach(c=>{
+        const div = document.createElement("div");
+        div.textContent = `${c.CLASS_ID} - ${c.CLASS_NAME}`;
+        div.onclick = ()=>addPrereq(c.CLASS_ID);
+        searchResult.appendChild(div);
+    });
+});
+
+// ===== Add Prerequisite =====
+function addPrereq(cid){
+    if(selectedPrereqs.includes(cid)) return;
+
+    fetch(`${API}/classes/${id}/prerequisites`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({prerequisite_class_id: cid})
+    }).then(()=>loadPrereq());
+
+    searchResult.innerHTML = "";
+    searchInput.value = "";
+}
+
+// ===== Update Class =====
+form.onsubmit = e=>{
+    e.preventDefault();
+
+    fetch(`${API}/classes/${id}`,{
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            name: Class_Name.value.trim(),
+            time: Class_Time.value.trim(),
+            day: Class_Day.value.trim(),
+            subject_id: Class_Subjects.value,
+            teacher_id: Class_Teacher.value,
+            prerequisites: selectedPrereqs
+        })
+    }).then(res=>{
+        if(res.ok){
+            alert("Class updated successfully");
+            location.href="ClassList.html";
+        }else{
+            alert("Failed to update class");
+        }
+    });
+}
+
+// ===== Navigation =====
+function goStaffHome(){ location.href="StaffHomepage.html"; }
+function logout(){ localStorage.removeItem("staff"); location.href="login.html"; }
+
+</script>
 </body>
 </html>
