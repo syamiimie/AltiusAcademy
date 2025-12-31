@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Student Payment</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html" class="active">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="PackageList.html">Package</a>
+        <a href="SubjectList.html">Subject</a>
+        <a href="report.html">Report</a>
+    </nav>
+    <!-- USER ICON + LOGOUT -->
+    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+        <button class="button" onclick="logout()">Logout</button>
+        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+        
+    </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+    <!-- PAGE TITLE -->
+    <h1 class="page-title">Student Payment Details</h1>
+
+    <!-- STUDENT SUMMARY CARD -->
+    <section class="summary-card">
+        <div class="summary-item">
+            <span class="label">Student Name</span>
+            <span id="studentName" class="value">XXXX</span>
+        </div>
+
+        <div class="summary-item">
+            <span class="label">Student ID</span>
+            <span id="studentId" class="value">XXXX</span>
+        </div>
+
+        <div class="summary-item highlight">
+            <span class="label">Total Paid (RM)</span>
+            <span id="totalFee" class="value">0.00</span>
+        </div>
+    </section>
+
+    <!-- PAYMENT TABLE -->
+    <section class="table-section">
+        <h2>Payment History</h2>
+
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>Payment Date</th>
+                    <th>Amount (RM)</th>
+                    <th>Receipt</th>
+                </tr>
+            </thead>
+            <tbody id="PaymentTable">
+                <!-- Dynamic rows -->
+            </tbody>
+        </table>
+
+        <!-- EMPTY STATE -->
+        <p id="emptyMessage" class="empty-message" hidden>
+            No payment records found for this student.
+        </p>
+    </section>
+
+</main>
+
+<script>
+    const studentId = new URLSearchParams(window.location.search).get("studentId");
+
+    fetch(`http://localhost:300/payment?studentId=${studentId}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("studentName").textContent = data.studentName;
+            document.getElementById("studentId").textContent = studentId;
+            document.getElementById("totalFee").textContent = data.totalPaid.toFixed(2);
+
+            const table = document.getElementById("PaymentTable");
+            const emptyMessage = document.getElementById("emptyMessage");
+
+            table.innerHTML = "";
+
+            if (data.payments.length === 0) {
+                emptyMessage.hidden = false;
+                return;
+            }
+
+            data.payments.forEach(p => {
+                table.innerHTML += `
+                    <tr>
+                        <td>${p.PAYMENT_ID}</td>
+                        <td>${p.PAYMENT_DATE}</td>
+                        <td>${p.TOTAL_FEES.toFixed(2)}</td>
+                        <td>
+                            <a href="Receipt.html?id=${p.PAYMENT_ID}" class="btn-receipt">
+                                View Receipt
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+</script>
+
+</body>
+</html>

@@ -399,3 +399,100 @@ table.section th {
         display: none;
     }
 }
+
+
+/* PAYMENT PAGE */
+/* PAGE TITLE */
+.page-title {
+    margin-bottom: 20px;
+    font-size: 26px;
+}
+
+/* SUMMARY CARD */
+.summary-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    background-color: #450050;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-item .label {
+    font-size: 14px;
+    color: #777;
+}
+
+.summary-item .value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.summary-item.highlight .value {
+    color: #30d675;
+    font-size: 22px;
+}
+
+/* TABLE SECTION */
+.table-section {
+    background-color: #450050;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.table-section h2 {
+    margin-bottom: 15px;
+}
+
+/* PAYMENT TABLE */
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+}
+
+.payment-table th,
+.payment-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.payment-table th {
+    font-weight: bold;
+}
+
+.payment-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* RECEIPT BUTTON */
+.btn-receipt {
+    padding: 6px 12px;
+    background-color: #3498db;
+    color: #fff;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.btn-receipt:hover {
+    background-color: #2980b9;
+}
+
+/* EMPTY MESSAGE */
+.empty-message {
+    margin-top: 15px;
+    color: #999;
+    font-style: italic;
+}
