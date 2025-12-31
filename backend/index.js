@@ -21,13 +21,8 @@ app.use("/packages", require("./routes/package.routes"));
 app.use("/classes", require("./routes/class.routes"));
 app.use("/subjects", require("./routes/subject.routes"));
 app.use("/reports", reportRoutes);
-<<<<<<< Updated upstream
 app.use("/enrollments", require("./routes/enrollment.routes"));
-
-=======
 app.use("/attendance", attendanceRoutes);
->>>>>>> Stashed changes
-
 
 
 app.listen(PORT, () => {
