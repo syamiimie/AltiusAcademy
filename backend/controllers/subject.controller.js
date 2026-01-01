@@ -186,3 +186,30 @@ exports.deleteSubject = async (req, res) => {
     if (conn) await conn.close();
   }
 };
+
+/* ================= GET SUBJECTS BY PACKAGE ================= */
+exports.getSubjectsByPackage = async (req, res) => {
+  let conn;
+  try {
+    conn = await oracledb.getConnection(db);
+
+    const r = await conn.execute(
+      `SELECT
+         SUBJECT_ID,
+         SUBJECT_NAME
+       FROM SUBJECT
+       WHERE PACKAGE_ID = :id
+       ORDER BY SUBJECT_NAME`,
+      { id: Number(req.params.id) }
+    );
+
+    res.json(r.rows);
+
+  } catch (e) {
+    console.error("Get Subjects By Package Error:", e);
+    res.status(500).json({ message: "Failed to load subjects" });
+  } finally {
+    if (conn) await conn.close();
+  }
+};
+

@@ -44,14 +44,17 @@
         <a href="TeacherList.html">Teacher</a>
         <a href="StudentList.html">Student</a>
         <a href="ClassList.html">Class</a>
+        <a href="EnrollmentList.html">Enrollment</a>
         <a href="PackageList.html">Package</a>
-        <a href="report.html">Report</a>
+        <a href="SubjectList.html">Subject</a>
+        <a href="AttendanceList.html">Attendance</a>
+        <a href="report.html" class="active">Report</a>
     </nav>
 
-    <div class="user-icon" onclick="goStaffHome()" style="cursor:pointer;">
-    👤
-</div>
-
+    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+        <button class="button" onclick="logout()">Logout</button>
+        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+    </div>
 </header>
 
 <!-- MAIN CONTENT -->
@@ -95,7 +98,8 @@
             <thead>
                 <tr>
                     <th>Student</th>
-                    <th>Class</th>
+                    <th>Class ID</th>
+                    <th>Class Name</th>
                     <th>Date</th>
                     <th>Status</th>
                 </tr>
@@ -109,58 +113,60 @@
 <script>
 function loadReport(){
     const month = document.getElementById("month").value;
+
     if(!month){
-        alert("Please select month");
+        alert("Please select report month");
         return;
     }
 
     fetch(`http://localhost:3000/reports/attendance?month=${month}`)
     .then(res => res.json())
     .then(data => {
+
         const table = document.getElementById("attendanceTable");
         table.innerHTML = "";
 
-        let present = 0;
-        let absent = 0;
-        let students = new Set();
-        let classes = new Set();
+        let totalPresent = 0;
+        let totalAbsent = 0;
+        const studentSet = new Set();
+        const classSet = new Set();
 
         data.forEach(r => {
-            students.add(r.STUDENT_NAME);
-            classes.add(r.CLASS_NAME);
+            studentSet.add(r.STUDENT_NAME);
+            classSet.add(r.CLASS_ID);
 
-            if(r.STATUS === "Present") present++;
-            else absent++;
+            if (r.ATTEND_STATUS === "Present") totalPresent++;
+            if (r.ATTEND_STATUS === "Absent") totalAbsent++;
 
             table.innerHTML += `
-            <tr>
-                <td>${r.STUDENT_NAME}</td>
-                <td>${r.CLASS_NAME}</td>
-                <td>${r.ATTEND_DATE}</td>
-                <td>${r.STATUS}</td>
-            </tr>`;
+                <tr>
+                    <td>${r.STUDENT_NAME}</td>
+                    <td>${r.CLASS_ID}</td>
+                    <td>${r.CLASS_NAME}</td>
+                    <td>${r.ATTEND_DATE}</td>
+                    <td>${r.ATTEND_STATUS}</td>
+                </tr>
+            `;
         });
 
-        document.getElementById("totalStudents").innerText = students.size;
-        document.getElementById("totalClasses").innerText = classes.size;
-        document.getElementById("totalPresent").innerText = present;
-        document.getElementById("totalAbsent").innerText = absent;
+        document.getElementById("totalStudents").innerText = studentSet.size;
+        document.getElementById("totalClasses").innerText = classSet.size;
+        document.getElementById("totalPresent").innerText = totalPresent;
+        document.getElementById("totalAbsent").innerText = totalAbsent;
     })
     .catch(err => {
         console.error(err);
-        alert("Failed to load report");
+        alert("Failed to load attendance report");
     });
 }
 
 function goStaffHome(){
     const staff = localStorage.getItem("staff");
-
     if(!staff){
         alert("Please login first");
         window.location.href = "login.html";
         return;
     }
-
     window.location.href = "StaffHomepage.html";
 }
 </script>

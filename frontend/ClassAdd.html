@@ -43,9 +43,18 @@
 <tr><td>Day:</td><td><input id="Class_Day" required></td></tr>
 
 <tr>
+    <td>Package:</td>
+    <td>
+        <select id="Class_Package" required>
+            <option value="">-- Select Package --</option>
+        </select>
+    </td>
+</tr>
+
+<tr>
     <td>Subject:</td>
     <td>
-        <select id="Class_Subjects" required>
+        <select id="Class_Subjects" required disabled>
             <option value="">-- Select Subject --</option>
         </select>
     </td>
@@ -83,98 +92,145 @@
 const API = "http://localhost:3000";
 const selectedPrereqs = [];
 
+/* ================= ELEMENTS ================= */
 const form = document.getElementById("classForm");
+
+const packageSelect = document.getElementById("Class_Package");
+const subjectSelect = document.getElementById("Class_Subjects");
+const teacherSelect = document.getElementById("Class_Teacher");
+
 const searchInput = document.getElementById("searchPrereq");
 const searchResult = document.getElementById("searchResult");
 const selectedPrereqList = document.getElementById("selectedPrereq");
 
-/* LOAD SUBJECTS */
-fetch(`${API}/subjects`)
-.then(r=>r.json())
-.then(data=>{
-    data.forEach(s=>{
-        Class_Subjects.innerHTML +=
-            `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
+/* ================= LOAD PACKAGES ================= */
+fetch(`${API}/packages`)
+.then(r => r.json())
+.then(data => {
+    data.forEach(p => {
+        packageSelect.innerHTML +=
+            `<option value="${p.PACKAGE_ID}">${p.PACKAGE_NAME}</option>`;
     });
 });
 
-/* LOAD TEACHERS */
+/* ================= LOAD TEACHERS ================= */
 fetch(`${API}/teachers`)
-.then(r=>r.json())
-.then(data=>{
-    data.forEach(t=>{
-        Class_Teacher.innerHTML +=
+.then(r => r.json())
+.then(data => {
+    data.forEach(t => {
+        teacherSelect.innerHTML +=
             `<option value="${t.TEACHER_ID}">${t.TEACHER_NAME}</option>`;
     });
 });
 
-/* SEARCH PREREQ */
-searchInput.addEventListener("input", async e=>{
+/* ================= PACKAGE → SUBJECT FILTER ================= */
+packageSelect.addEventListener("change", async () => {
+    const packageId = packageSelect.value;
+
+    subjectSelect.innerHTML = `<option value="">-- Select Subject --</option>`;
+    subjectSelect.disabled = true;
+
+    if (!packageId) return;
+
+    try {
+        const res = await fetch(`${API}/subjects/by-package/${packageId}`);
+        const subjects = await res.json();
+
+        if (subjects.length === 0) {
+            subjectSelect.innerHTML =
+                `<option value="">No subjects in this package</option>`;
+        } else {
+            subjects.forEach(s => {
+                subjectSelect.innerHTML +=
+                    `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
+            });
+        }
+
+        // ✅ ALWAYS re-enable after loading
+        subjectSelect.disabled = false;
+
+    } catch (err) {
+        console.error(err);
+        subjectSelect.innerHTML =
+            `<option value="">Failed to load subjects</option>`;
+        subjectSelect.disabled = false;
+    }
+});
+
+/* ================= SEARCH PREREQUISITE ================= */
+searchInput.addEventListener("input", async e => {
     const keyword = e.target.value.trim();
-    searchResult.innerHTML="";
-    if(!keyword) return;
+    searchResult.innerHTML = "";
+    if (!keyword) return;
 
     const res = await fetch(`${API}/classes`);
     const classes = await res.json();
 
-    classes.filter(c =>
-        c.CLASS_ID.toLowerCase().includes(keyword.toLowerCase()) ||
-        c.CLASS_NAME.toLowerCase().includes(keyword.toLowerCase())
-    ).forEach(c=>{
-        const div = document.createElement("div");
-        div.textContent = `${c.CLASS_ID} - ${c.CLASS_NAME}`;
-        div.onclick = ()=>addPrereq(c.CLASS_ID);
-        searchResult.appendChild(div);
-    });
+    classes
+        .filter(c =>
+            c.CLASS_ID.toLowerCase().includes(keyword.toLowerCase()) ||
+            c.CLASS_NAME.toLowerCase().includes(keyword.toLowerCase())
+        )
+        .forEach(c => {
+            const div = document.createElement("div");
+            div.textContent = `${c.CLASS_ID} - ${c.CLASS_NAME}`;
+            div.onclick = () => addPrereq(c.CLASS_ID);
+            searchResult.appendChild(div);
+        });
 });
 
-/* ADD PREREQ */
-function addPrereq(id){
-    if(selectedPrereqs.includes(id)) return;
+/* ================= ADD PREREQUISITE ================= */
+function addPrereq(id) {
+    if (selectedPrereqs.includes(id)) return;
+
     selectedPrereqs.push(id);
 
     const li = document.createElement("li");
     li.textContent = id + " ";
 
     const btn = document.createElement("button");
-    btn.type="button";
-    btn.textContent="✖";
-    btn.onclick=()=>{
-        selectedPrereqs.splice(selectedPrereqs.indexOf(id),1);
+    btn.type = "button";
+    btn.textContent = "✖";
+    btn.onclick = () => {
+        selectedPrereqs.splice(selectedPrereqs.indexOf(id), 1);
         li.remove();
     };
 
     li.appendChild(btn);
     selectedPrereqList.appendChild(li);
-    searchResult.innerHTML="";
-    searchInput.value="";
+    searchResult.innerHTML = "";
+    searchInput.value = "";
 }
 
-/* SUBMIT */
-form.onsubmit = async e=>{
+/* ================= SUBMIT FORM ================= */
+form.onsubmit = async e => {
     e.preventDefault();
 
-    await fetch(`${API}/classes`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
+    await fetch(`${API}/classes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
             name: Class_Name.value,
             time: Class_Time.value,
             day: Class_Day.value,
-            subject_id: Class_Subjects.value,
-            teacher_id: Class_Teacher.value,
+            subject_id: subjectSelect.value,
+            teacher_id: teacherSelect.value,
             prerequisites: selectedPrereqs
         })
     });
 
     alert("Class added successfully");
-    location.href="ClassList.html";
+    location.href = "ClassList.html";
 };
 
-function goStaffHome(){ location.href="StaffHomepage.html"; }
-function logout(){
+/* ================= NAV ================= */
+function goStaffHome() {
+    location.href = "StaffHomepage.html";
+}
+
+function logout() {
     localStorage.removeItem("staff");
-    location.href="login.html";
+    location.href = "login.html";
 }
 </script>
 
