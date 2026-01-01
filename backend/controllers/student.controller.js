@@ -24,7 +24,7 @@ exports.getAllStudents = async (req, res) => {
         s.STUDENT_PHONENUM,
         s.STUDENT_TYPE,
 
-        p.STUDENT_LEVEL,
+        p.STUDENT_YEAR,
         sec.STUDENT_FORM,
         sec.STREAM
 
@@ -117,16 +117,16 @@ exports.addStudent = async (req, res) => {
         `
         INSERT INTO PRIMARY_STUDENT (
           STUDENT_ID,
-          STUDENT_LEVEL
+          STUDENT_YEAR
         )
         VALUES (
           :id,
-          :level
+          :year
         )
         `,
         {
           id: studentId,
-          level: clean(req.body.level) || "Level 1"
+          year: clean(req.body.year) || "Year 4"
         }
       );
     }
@@ -234,14 +234,14 @@ exports.updateStudent = async (req, res) => {
         USING dual
         ON (p.STUDENT_ID = :id)
         WHEN MATCHED THEN
-          UPDATE SET STUDENT_LEVEL = :level
+          UPDATE SET STUDENT_YEAR = :year
         WHEN NOT MATCHED THEN
-          INSERT (STUDENT_ID, STUDENT_LEVEL)
-          VALUES (:id, :level)
+          INSERT (STUDENT_ID, STUDENT_YEAR)
+          VALUES (:id, :year)
         `,
         {
           id: req.params.id,
-          level: clean(req.body.level) || "Level 1"
+          year: clean(req.body.year) || "Year 4"
         }
       );
     }
