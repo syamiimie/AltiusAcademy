@@ -6,6 +6,7 @@ const staffRoutes = require("./routes/staff.routes");
 const reportRoutes = require("./routes/report.routes");
 const attendanceRoutes = require("./routes/attendance.routes");
 const paymentRoutes = require("./routes/payment.routes");
+const attendanceReportRoutes = require("./routes/attendanceReport.routes");
 
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/reports", reportRoutes);
 app.use("/enrollments", require("./routes/enrollment.routes"));
 app.use("/attendance", attendanceRoutes);
 app.use("/payment", paymentRoutes);
+app.use("/reports/attendance", attendanceReportRoutes);
 
 
 app.listen(PORT, () => {
