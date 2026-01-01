@@ -604,9 +604,10 @@ table.section th {
     align-items: center;
   }
   .modal-content {
-    background: #fff;
+    background: #450050;
+    color: white;
     padding: 20px;
-    width: 320px;
+    width: 350px;
     border-radius: 6px;
   }
   .modal-actions {
