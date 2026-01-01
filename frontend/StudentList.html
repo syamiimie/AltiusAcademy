@@ -24,6 +24,7 @@
         <a href="EnrollmentList.html" class="active">Enrollment</a>
         <a href="PackageList.html">Package</a>
         <a href="SubjectList.html" class="active">Subject</a>
+        <a href="AttendanceList.html">Attendance</a>
         <a href="report.html">Report</a>
     </nav>
 
@@ -82,8 +83,9 @@ fetch("http://localhost:3000/students")
               <div class="type-box">
                 <div class="type-main">Primary</div>
                 <div class="type-sub">
-                  Year: ${s.STUDENT_LEVEL ?? "-"}
+                    ${s.STUDENT_YEAR ?? "-"}
                 </div>
+
               </div>
             `;
         }
@@ -127,9 +129,7 @@ function del(id) {
     }
     return false;
 }
-</script>
 
-<script>
 function goStaffHome(){
     const staff = localStorage.getItem("staff");
 

@@ -8,6 +8,33 @@
 </head>
 
 <body>
+  <!-- HEADER -->
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png" alt="Altius Academy">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="EnrollmentList.html" class="active">Enrollment</a>
+        <a href="PackageList.html">Package</a>
+        <a href="SubjectList.html" class="active">Subject</a>
+        <a href="AttendanceList.html">Attendance</a>
+        <a href="report.html">Report</a>
+    </nav>
+
+    <!-- USER ICON + LOGOUT -->
+    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+        <button class="button" onclick="logout()">Logout</button>
+        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+        
+    </div>
+
+</header>
 
 <main class="content">
 
@@ -134,7 +161,7 @@ fetch(`http://localhost:3000/students/${id}`)
     toggleSubtype(s.STUDENT_TYPE);
 
     if (s.STUDENT_TYPE === "Primary") {
-      student_year.value = s.STUDENT_LEVEL;
+      student_year.value = s.STUDENT_YEAR;
     } else {
       student_form.value = s.STUDENT_FORM;
       student_stream.value = s.STREAM;
@@ -156,7 +183,7 @@ editForm.addEventListener("submit", async e => {
     email: student_email.value,
     phone: student_phone.value,
     type: document.querySelector('input[name="student_type"]:checked').value,
-    level: student_year.value,
+    year: student_year.value,
     form: student_form.value,
     stream: student_stream.value
   };
@@ -169,6 +196,17 @@ editForm.addEventListener("submit", async e => {
 
   location.href = "StudentList.html";
 });
+function goStaffHome(){
+    const staff = localStorage.getItem("staff");
+
+    if(!staff){
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    window.location.href = "StaffHomepage.html";
+}
 </script>
 
 </body>
