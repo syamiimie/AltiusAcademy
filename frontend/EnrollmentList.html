@@ -47,14 +47,15 @@ fetch("http://localhost:3000/enrollments")
     const grouped = {};
 
     data.forEach(e => {
-        const id = e.STUDENT_ID || e.student_id || e.STUDENT_NAME;
+        const id = e.STUDENT_ID;
 
         if (!grouped[id]) {
             grouped[id] = {
-                enrollId: e.ENROLL_ID,   
+                studentId: e.STUDENT_ID,
                 studentName: e.STUDENT_NAME,
                 status: e.ENROLL_STATUS,
                 packages: new Set(),
+                enrollments: [],   // ✅ store ALL enrollments
                 classes: []
             };
         }
@@ -63,6 +64,11 @@ fetch("http://localhost:3000/enrollments")
         if (e.PACKAGE_NAME) {
             grouped[id].packages.add(e.PACKAGE_NAME);
         }
+        grouped[id].enrollments.push({
+            enrollId: e.ENROLL_ID,
+            packageName: e.PACKAGE_NAME
+        });
+
 
         grouped[id].classes.push({
             classId: e.CLASS_ID || "-",
@@ -119,7 +125,7 @@ fetch("http://localhost:3000/enrollments")
                 </table>
 
                 <div class="payment-title">
-                    <a href="#" style="color: aquamarine;">Payment Details</a>
+                    <a href="Payment.html?studentId=${student.studentId}">Payment Details</a>
                 </div>
 
                 <div class="card-actions">

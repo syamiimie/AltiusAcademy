@@ -87,35 +87,34 @@
 </main>
 
 <script>
-const studentId = new URLSearchParams(window.location.search).get("studentId");
-let currentEnrollmentId = null;
+    const studentId = new URLSearchParams(window.location.search).get("studentId");
+    let currentEnrollmentId = null;
 
-/* Fetch student info & enrollments */
-function loadStudentData() {
-    // Fetch student name and total paid
-    fetch(`http://localhost:3000/payment?studentId=${studentId}`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("studentName").textContent = data.studentName;
+    /* ===================== LOAD STUDENT DATA ===================== */
+    async function loadStudentData() {
+        try {
+            // 1️⃣ Fetch student info & total paid
+            const summaryRes = await fetch(`http://localhost:3000/payment/student-payment-summary?studentId=${studentId}`);
+            const summaryData = await summaryRes.json();
+
+            document.getElementById("studentName").textContent = summaryData.STUDENTNAME || 'N/A';
             document.getElementById("studentId").textContent = studentId;
-            document.getElementById("totalFee").textContent = parseFloat(data.totalPaid).toFixed(2);
-        });
-
-    // Fetch all enrollments
-    fetch(`http://localhost:3000/enrollments?studentId=${studentId}`)
-        .then(res => res.json())
-        .then(data => {
+            document.getElementById("totalFee").textContent = parseFloat(summaryData.TOTALPAID || 0).toFixed(2);
+    
+            // 2️⃣ Fetch enrollments
+            const enrollRes = await fetch(`http://localhost:3000/enrollments?studentId=${studentId}`);
+            const enrollments = await enrollRes.json();
             const tbody = document.getElementById("EnrollmentTable");
             const emptyMessage = document.getElementById("emptyMessage");
             tbody.innerHTML = "";
-
-            if (data.length === 0) {
+    
+            if (!enrollments || enrollments.length === 0) {
                 emptyMessage.hidden = false;
                 return;
             }
             emptyMessage.hidden = true;
-
-            data.forEach(e => {
+    
+            enrollments.forEach(e => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${e.ENROLL_ID}</td>
@@ -124,58 +123,70 @@ function loadStudentData() {
                         <td>${e.PAYMENTSTATUS}</td>
                         <td>
                             ${e.PAYMENTSTATUS === 'Unpaid'
-                                ? `<button onclick="openPaymentModal(${e.ENROLL_ID})">Add Payment</button>`
+                                ? `<button class="button" onclick="openPaymentModal(${e.ENROLL_ID}, ${parseFloat(e.PACKAGE_FEE)})">Add Payment</button>`
                                 : `<a href="Receipt.html?id=${e.ENROLL_ID}">View Receipt</a>`}
                         </td>
                     </tr>
                 `;
             });
-        });
-}
-
-/* Open & close modal */
-function openPaymentModal(enrollmentId) {
-    currentEnrollmentId = enrollmentId;
-    document.getElementById("paymentModal").classList.remove("hidden");
-}
-
-function closePaymentModal() {
-    currentEnrollmentId = null;
-    document.getElementById("paymentModal").classList.add("hidden");
-}
-
-/* Submit payment for specific enrollment */
-function submitPayment() {
-    const paymentDate = document.getElementById("paymentDate").value;
-    const totalFees = document.getElementById("paymentAmount").value;
-
-    if (!paymentDate || !totalFees) {
-        alert("Please complete all fields");
-        return;
+    
+        } catch (err) {
+            console.error("Error loading student data:", err);
+            alert("Failed to load student or enrollment data.");
+        }
     }
-
-    fetch("http://localhost:3000/payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            enrollmentId: currentEnrollmentId,
-            paymentDate,
-            totalFees
-        })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Failed to add payment");
-        return res.text();
-    })
-    .then(() => {
-        closePaymentModal();
-        loadStudentData(); // refresh table & summary
-    })
-    .catch(err => alert(err.message));
-}
-
-/* Initial load */
-loadStudentData();
-</script>
+    
+    /* ===================== MODAL FUNCTIONS ===================== */
+    function openPaymentModal(enrollmentId, fee) {
+        currentEnrollmentId = enrollmentId;
+        document.getElementById("paymentAmount").value = parseFloat(fee).toFixed(2);
+        document.getElementById("paymentDate").valueAsDate = new Date(); // default to today
+        document.getElementById("paymentModal").classList.remove("hidden");
+    }
+    
+    function closePaymentModal() {
+        currentEnrollmentId = null;
+        document.getElementById("paymentModal").classList.add("hidden");
+    }
+    
+    /* ===================== SUBMIT PAYMENT ===================== */
+    async function submitPayment() {
+        const paymentDate = document.getElementById("paymentDate").value;
+        const totalFees = document.getElementById("paymentAmount").value;
+    
+        if (!currentEnrollmentId || !paymentDate || !totalFees) {
+            alert("Please complete all fields.");
+            return;
+        }
+    
+        try {
+            const res = await fetch("http://localhost:3000/payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    enrollmentId: currentEnrollmentId,
+                    paymentDate,
+                    totalFees
+                })
+            });
+    
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || "Failed to add payment");
+            }
+    
+            alert("Payment added successfully!");
+            closePaymentModal();
+            loadStudentData(); // Refresh table and total paid
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    }
+    
+    /* ===================== INITIAL LOAD ===================== */
+    document.addEventListener("DOMContentLoaded", loadStudentData);
+    </script>
+    
 </body>
 </html>
