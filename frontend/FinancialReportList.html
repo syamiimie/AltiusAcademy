@@ -8,7 +8,9 @@
 
     <style>
         @media print {
-            body * { visibility: hidden; }
+            body * {
+                visibility: hidden;
+            }
             .financial-report, .financial-report * {
                 visibility: visible;
             }
@@ -18,7 +20,9 @@
                 top: 0;
                 width: 100%;
             }
-            .print-btn { display: none; }
+            .print-btn {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -28,7 +32,7 @@
 <header class="top-bar">
     <div class="logo">
         <a href="StaffHomepage.html">
-            <img src="images/logo1.png">
+            <img src="images/logo1.png" alt="Altius Academy">
         </a>
     </div>
 
@@ -47,10 +51,10 @@
     <div class="page-title">Financial Report</div>
 
     <!-- FILTER -->
-    <form id="reportForm" style="text-align:center;">
-        <label>Report Period:</label>
+    <form id="reportForm" style="text-align:center; margin-bottom:20px;">
+        <label><strong>Report Period:</strong></label>
         <input type="month" id="month" required>
-        <button class="button">Generate</button>
+        <button type="submit" class="button">Generate</button>
         <button type="button" onclick="window.print()" class="button print-btn">Print</button>
     </form>
 
@@ -58,15 +62,15 @@
     <div class="package-grid">
         <div class="package-card">
             <div class="package-title">Total Revenue</div>
-            <p id="totalRevenue">RM 0</p>
+            <p id="totalRevenue">RM 0.00</p>
         </div>
         <div class="package-card">
             <div class="package-title">Total Collected</div>
-            <p id="totalCollected">RM 0</p>
+            <p id="totalCollected">RM 0.00</p>
         </div>
         <div class="package-card">
             <div class="package-title">Outstanding Fees</div>
-            <p id="outstandingFees">RM 0</p>
+            <p id="outstandingFees">RM 0.00</p>
         </div>
         <div class="package-card">
             <div class="package-title">Total Enrollment</div>
@@ -94,36 +98,63 @@
 </main>
 
 <script>
-document.getElementById("reportForm").addEventListener("submit", e => {
+document.getElementById("reportForm").addEventListener("submit", function (e) {
     e.preventDefault();
+
     const month = document.getElementById("month").value;
+    if (!month) {
+        alert("Please select a report month.");
+        return;
+    }
+
+    const formatRM = amount =>
+        `RM ${Number(amount || 0).toLocaleString("en-MY", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
 
     fetch(`http://localhost:3000/reports/financial-report?month=${month}`)
-
-        .then(res => res.json())
+        .then(response => response.json())
         .then(data => {
             document.getElementById("totalRevenue").innerText =
-                `RM ${data.summary.totalRevenue || 0}`;
+                formatRM(data.summary.totalRevenue);
+
             document.getElementById("totalCollected").innerText =
-                `RM ${data.summary.totalCollected || 0}`;
+                formatRM(data.summary.totalCollected);
+
             document.getElementById("outstandingFees").innerText =
-                `RM ${data.summary.outstandingFees || 0}`;
+                formatRM(data.summary.outstandingFees);
+
             document.getElementById("totalEnrollment").innerText =
                 data.summary.totalEnrollment || 0;
 
             const table = document.getElementById("paymentTable");
             table.innerHTML = "";
 
+            if (!data.payments || data.payments.length === 0) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align:center;">
+                            No payment records found for this period
+                        </td>
+                    </tr>`;
+                return;
+            }
+
             data.payments.forEach(p => {
                 table.innerHTML += `
-                <tr>
-                    <td>${p.STUDENT_NAME}</td>
-                    <td>${p.PACKAGE_NAME}</td>
-                    <td>RM ${p.TOTAL_FEE}</td>
-                    <td>RM ${p.AMOUNT_PAID}</td>
-                    <td>RM ${p.OUTSTANDING}</td>
-                </tr>`;
+                    <tr>
+                        <td>${p.STUDENT_NAME}</td>
+                        <td>${p.PACKAGE_NAME}</td>
+                        <td>${formatRM(p.TOTAL_FEE)}</td>
+                        <td>${formatRM(p.AMOUNT_PAID)}</td>
+                        <td>${formatRM(p.OUTSTANDING)}</td>
+                    </tr>`;
             });
+        })
+        .catch(error => {
+            console.error(error);
+            alert("Failed to generate financial report. Please try again.");
         });
 });
 </script>
