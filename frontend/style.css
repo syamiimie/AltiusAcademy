@@ -653,6 +653,15 @@ table.section th {
   opacity: 0.9;
 }
 
+.preview-box {
+    color:black;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 6px;
+    background: #f9f9f9;
+    margin-top: 5px;
+}
+
 
 
 

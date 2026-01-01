@@ -2,33 +2,18 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/enrollment.controller");
 
-/* ===== LIST ===== */
-/*
-  GET /enrollments
-  GET /enrollments?studentId=1
-*/
-router.get("/", (req, res) => {
-  if (req.query.studentId) {
-    return controller.getEnrollmentsByStudent(req, res);
-  }
-  return controller.getAllEnrollments(req, res);
-});
+/* ===== ENROLLMENTS ===== */
 
-/* ===== BY STUDENT (PATH PARAM) ===== */
-/*
-  GET /enrollments/student/1
-*/
-router.get("/student/:id", controller.getEnrollmentsByStudentId);
+// GET all enrollments (used by list & edit pages)
+router.get("/", controller.getAllEnrollments);
 
-/* ===== SINGLE ===== */
-/*
-  GET /enrollments/10
-*/
-router.get("/:id", controller.getEnrollmentById);
+// ADD enrollment
+router.post("/", controller.addEnrollment);
 
-/* ===== CRUD ===== */
-router.post("/", controller.addEnrollment);          // POST /enrollments
-router.put("/:id", controller.updateEnrollment);     // PUT /enrollments/:id
-router.delete("/:id", controller.deleteEnrollment);  // DELETE /enrollments/:id
+// UPDATE enrollment
+router.put("/:id", controller.updateEnrollment);
+
+// DELETE enrollment
+router.delete("/:id", controller.deleteEnrollment);
 
 module.exports = router;
