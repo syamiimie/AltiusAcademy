@@ -3,7 +3,13 @@ const router = express.Router();
 const controller = require("../controllers/enrollment.controller");
 
 /* ===== LIST ===== */
-router.get("/", controller.getAllEnrollments);  // GET /enrollments (when mounted at /enrollments)
+router.get("/", (req, res) => {
+    if (req.query.studentId) {
+      return controller.getEnrollmentsByStudent(req, res);
+    }
+    return controller.getAllEnrollments(req, res);
+  });
+  
 
 /* ===== SINGLE ===== */
 router.get("/:id", controller.getEnrollmentById);  // GET /enrollments/:id

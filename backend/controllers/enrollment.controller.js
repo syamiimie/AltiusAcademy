@@ -98,7 +98,7 @@ exports.getEnrollmentById = async (req, res) => {
 
         p.Package_Name,
         p.Duration,
-        p.PackageFee AS Package_Fee,
+        p.Package_Fee AS Package_Fee,
 
         sub.Subject_Name,
         c.Class_ID,
@@ -233,5 +233,50 @@ exports.deleteEnrollment = async (req, res) => {
     if (conn) {
       try { await conn.close(); } catch (err) { console.error(err); }
     }
+  }
+};
+
+/* ================= GET ENROLLMENTS BY STUDENT ================= */
+exports.getEnrollmentsByStudent = async (req, res) => {
+  const studentId = Number(req.query.studentId);
+
+if (!studentId || isNaN(studentId)) {
+  return res.status(400).json({
+    message: "Valid studentId is required"
+  });
+}
+
+  let conn;
+
+  try {
+    conn = await oracledb.getConnection(db);
+
+    const result = await conn.execute(
+      `
+      SELECT 
+        e.Enroll_ID,
+        p.Package_Name,
+        p.Package_Fee,
+        CASE 
+          WHEN e.Payment_ID IS NULL THEN 'Unpaid'
+          ELSE 'Paid'
+        END AS PAYMENTSTATUS
+      FROM ALTIUS_DB.Enrollment e
+      JOIN ALTIUS_DB.Package p
+        ON e.Package_ID = p.Package_ID
+      WHERE e.Student_ID = :studentId
+      ORDER BY e.Enroll_ID
+      `,
+      [studentId],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error("Error fetching enrollments by student:", err);
+    res.status(500).send("Error fetching enrollments by student");
+  } finally {
+    if (conn) await conn.close();
   }
 };

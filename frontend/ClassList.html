@@ -35,7 +35,7 @@
 <table border="1" class="section">
 <thead>
 <tr>
-    <td class="titles" colspan="7">Class List</td>
+    <td class="titles" colspan="8">Class List</td>
     <td class="action-cell">
         <a href="ClassAdd.html" class="button">Add</a>
     </td>
@@ -45,6 +45,7 @@
     <th>Name</th>
     <th>Time</th>
     <th>Day</th>
+    <th>Package</th>
     <th>Subject</th>
     <th>Teacher</th>
     <th>Prerequisite</th>
@@ -70,6 +71,7 @@ fetch("http://localhost:3000/classes/with-prereq")
             <td>${c.CLASS_NAME}</td>
             <td>${c.CLASS_TIME}</td>
             <td>${c.CLASS_DAY}</td>
+            <td>${c.PACKAGE_NAME}</td>
             <td>${c.SUBJECT_NAME}</td>
             <td>${c.TEACHER_NAME}</td>
             <td>${c.PREREQUISITES || "-"}</td>

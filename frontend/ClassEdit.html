@@ -43,13 +43,23 @@
 <tr><td>Time</td><td><input id="Class_Time" required></td></tr>
 <tr><td>Day</td><td><input id="Class_Day" required></td></tr>
 <tr>
+    <td>Package</td>
+    <td>
+        <select id="Class_Package" required>
+            <option value="">-- Select Package --</option>
+        </select>
+    </td>
+</tr>
+
+<tr>
     <td>Subject</td>
     <td>
-        <select id="Class_Subjects" required>
+        <select id="Class_Subjects" required disabled>
             <option value="">-- Select Subject --</option>
         </select>
     </td>
 </tr>
+
 <tr>
     <td>Teacher</td>
     <td>
@@ -90,52 +100,112 @@ const API = "http://localhost:3000";
 const id = new URLSearchParams(location.search).get("id");
 const selectedPrereqs = [];
 
-// ===== Elements =====
+/* ===== ELEMENTS ===== */
+const form = document.getElementById("classForm");
+
 const Class_Name = document.getElementById("Class_Name");
 const Class_Time = document.getElementById("Class_Time");
 const Class_Day = document.getElementById("Class_Day");
-const Class_Subjects = document.getElementById("Class_Subjects");
-const Class_Teacher = document.getElementById("Class_Teacher");
+
+const packageSelect = document.getElementById("Class_Package");
+const subjectSelect = document.getElementById("Class_Subjects");
+const teacherSelect = document.getElementById("Class_Teacher");
+
 const searchInput = document.getElementById("searchPrereq");
 const searchResult = document.getElementById("searchResult");
 const selectedPrereqList = document.getElementById("selectedPrereq");
-const form = document.getElementById("classForm");
 
-// ===== Load Subjects =====
-fetch(`${API}/subjects`).then(r=>r.json()).then(data=>{
-    data.forEach(s=>{
-        Class_Subjects.innerHTML += `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
+let classData = null;
+let teachersLoaded = false;
+
+/* ===== LOAD PACKAGES ===== */
+fetch(`${API}/packages`)
+.then(r => r.json())
+.then(data => {
+    data.forEach(p => {
+        packageSelect.innerHTML +=
+            `<option value="${p.PACKAGE_ID}">${p.PACKAGE_NAME}</option>`;
     });
 });
 
-// ===== Load Teachers =====
-fetch(`${API}/teachers`).then(r=>r.json()).then(data=>{
-    data.forEach(t=>{
-        Class_Teacher.innerHTML += `<option value="${t.TEACHER_ID}">${t.TEACHER_NAME}</option>`;
+/* ===== LOAD TEACHERS ===== */
+fetch(`${API}/teachers`)
+.then(r => r.json())
+.then(data => {
+    teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>`;
+
+    data.forEach(t => {
+        teacherSelect.innerHTML +=
+            `<option value="${String(t.TEACHER_ID)}">${t.TEACHER_NAME}</option>`;
     });
+
+    teachersLoaded = true;
+
+    // ✅ if class already loaded, set teacher now
+    if (classData) {
+        teacherSelect.value = String(classData.TEACHER_ID);
+    }
 });
 
-// ===== Load Class Info =====
-fetch(`${API}/classes/${id}`).then(r=>r.json()).then(c=>{
+/* ===== PACKAGE → SUBJECT FILTER ===== */
+async function loadSubjectsByPackage(packageId, selectedSubjectId = null) {
+    subjectSelect.innerHTML = `<option value="">-- Select Subject --</option>`;
+    subjectSelect.disabled = true;
+
+    if (!packageId) return;
+
+    const res = await fetch(`${API}/subjects/by-package/${packageId}`);
+    const subjects = await res.json();
+
+    subjects.forEach(s => {
+        subjectSelect.innerHTML +=
+            `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
+    });
+
+    if (selectedSubjectId) {
+        subjectSelect.value = selectedSubjectId;
+    }
+
+    subjectSelect.disabled = false;
+}
+
+packageSelect.addEventListener("change", () => {
+    loadSubjectsByPackage(packageSelect.value);
+});
+
+/* ===== LOAD CLASS INFO (KEY PART) ===== */
+fetch(`${API}/classes/${id}`)
+.then(r => r.json())
+.then(async c => {
+    classData = c;
+
     Class_Name.value = c.CLASS_NAME;
     Class_Time.value = c.CLASS_TIME;
     Class_Day.value = c.CLASS_DAY;
 
-    setTimeout(()=>{
-        Class_Subjects.value = c.SUBJECT_ID;
-        Class_Teacher.value = c.TEACHER_ID;
-    }, 200);
+    // ✅ set teacher ONLY if teachers are loaded
+    if (teachersLoaded) {
+        teacherSelect.value = String(c.TEACHER_ID);
+    }
+
+    // 🔑 Find package from subject
+    const res = await fetch(`${API}/subjects/${c.SUBJECT_ID}`);
+    const subject = await res.json();
+
+    packageSelect.value = subject.PACKAGE_ID;
+
+    loadSubjectsByPackage(subject.PACKAGE_ID, c.SUBJECT_ID);
 });
 
-// ===== Load Existing Prerequisites =====
-function loadPrereq(){
+/* ===== LOAD EXISTING PREREQUISITES ===== */
+function loadPrereq() {
     selectedPrereqs.length = 0;
     selectedPrereqList.innerHTML = "";
 
     fetch(`${API}/classes/${id}/prerequisites`)
-    .then(r=>r.json())
-    .then(data=>{
-        data.forEach(p=>{
+    .then(r => r.json())
+    .then(data => {
+        data.forEach(p => {
             selectedPrereqs.push(p.CLASS_ID);
 
             const li = document.createElement("li");
@@ -144,9 +214,10 @@ function loadPrereq(){
             const btn = document.createElement("button");
             btn.type = "button";
             btn.textContent = "✖";
-            btn.onclick = ()=>{
-                fetch(`${API}/classes/prerequisites/${p.PREREQUISITE_ID}`,{method:"DELETE"})
-                .then(()=>loadPrereq());
+            btn.onclick = () => {
+                fetch(`${API}/classes/prerequisites/${p.PREREQUISITE_ID}`, {
+                    method: "DELETE"
+                }).then(loadPrereq);
             };
 
             li.appendChild(btn);
@@ -156,11 +227,11 @@ function loadPrereq(){
 }
 loadPrereq();
 
-// ===== Search Classes for Prerequisite =====
-searchInput.addEventListener("input", async e=>{
+/* ===== SEARCH PREREQUISITE ===== */
+searchInput.addEventListener("input", async e => {
     const keyword = e.target.value.trim();
     searchResult.innerHTML = "";
-    if(!keyword) return;
+    if (!keyword) return;
 
     const res = await fetch(`${API}/classes`);
     const classes = await res.json();
@@ -168,59 +239,62 @@ searchInput.addEventListener("input", async e=>{
     classes.filter(c =>
         c.CLASS_ID !== id &&
         !selectedPrereqs.includes(c.CLASS_ID) &&
-        (c.CLASS_ID.toLowerCase().includes(keyword.toLowerCase()) ||
-         c.CLASS_NAME.toLowerCase().includes(keyword.toLowerCase()))
-    ).forEach(c=>{
+        (
+            c.CLASS_ID.toLowerCase().includes(keyword.toLowerCase()) ||
+            c.CLASS_NAME.toLowerCase().includes(keyword.toLowerCase())
+        )
+    ).forEach(c => {
         const div = document.createElement("div");
         div.textContent = `${c.CLASS_ID} - ${c.CLASS_NAME}`;
-        div.onclick = ()=>addPrereq(c.CLASS_ID);
+        div.onclick = () => addPrereq(c.CLASS_ID);
         searchResult.appendChild(div);
     });
 });
 
-// ===== Add Prerequisite =====
-function addPrereq(cid){
-    if(selectedPrereqs.includes(cid)) return;
-
-    fetch(`${API}/classes/${id}/prerequisites`,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({prerequisite_class_id: cid})
-    }).then(()=>loadPrereq());
+/* ===== ADD PREREQUISITE ===== */
+function addPrereq(cid) {
+    fetch(`${API}/classes/${id}/prerequisites`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prerequisite_class_id: cid })
+    }).then(loadPrereq);
 
     searchResult.innerHTML = "";
     searchInput.value = "";
 }
 
-// ===== Update Class =====
-form.onsubmit = e=>{
+/* ===== UPDATE CLASS ===== */
+form.onsubmit = e => {
     e.preventDefault();
 
-    fetch(`${API}/classes/${id}`,{
-        method:"PUT",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
+    fetch(`${API}/classes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
             name: Class_Name.value.trim(),
             time: Class_Time.value.trim(),
             day: Class_Day.value.trim(),
-            subject_id: Class_Subjects.value,
-            teacher_id: Class_Teacher.value,
+            subject_id: subjectSelect.value,
+            teacher_id: teacherSelect.value,
             prerequisites: selectedPrereqs
         })
-    }).then(res=>{
-        if(res.ok){
+    }).then(res => {
+        if (res.ok) {
             alert("Class updated successfully");
-            location.href="ClassList.html";
-        }else{
+            location.href = "ClassList.html";
+        } else {
             alert("Failed to update class");
         }
     });
-}
+};
 
-// ===== Navigation =====
+/* ===== NAV ===== */
 function goStaffHome(){ location.href="StaffHomepage.html"; }
-function logout(){ localStorage.removeItem("staff"); location.href="login.html"; }
-
+function logout(){
+    localStorage.removeItem("staff");
+    location.href="login.html";
+}
 </script>
+
 </body>
 </html>
