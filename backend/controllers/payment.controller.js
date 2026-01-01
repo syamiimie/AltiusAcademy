@@ -134,3 +134,55 @@ exports.getStudentPaymentSummary = async (req, res) => {
     if (conn) await conn.close();
   }
 };
+
+/* ================= RECEIPT BY ENROLLMENT ================= */
+exports.getReceiptByEnrollmentId = async (req, res) => {
+  const enrollId = Number(req.query.enrollId);
+
+  if (!enrollId || isNaN(enrollId)) {
+    return res.status(400).send("Valid enrollId is required");
+  }
+
+  let conn;
+  try {
+    conn = await oracledb.getConnection(db);
+
+    const result = await conn.execute(
+      `
+      SELECT
+        s.Student_Name,
+        s.Student_IC,
+        e.Enroll_ID,
+        e.Enroll_Date,
+        pkg.Package_Name,
+        pkg.Package_Fee,
+        pay.Payment_ID,
+        pay.Payment_Date,
+        pay.Total_Fees
+      FROM ALTIUS_DB.Enrollment e
+      JOIN ALTIUS_DB.Student s
+        ON e.Student_ID = s.Student_ID
+      JOIN ALTIUS_DB.Package pkg
+        ON e.Package_ID = pkg.Package_ID
+      JOIN ALTIUS_DB.Payment pay
+        ON e.Payment_ID = pay.Payment_ID
+      WHERE e.Enroll_ID = :enrollId
+      `,
+      { enrollId },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send("Receipt not found");
+    }
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error("Receipt error:", err);
+    res.status(500).send("Error generating receipt");
+  } finally {
+    if (conn) await conn.close();
+  }
+};
+

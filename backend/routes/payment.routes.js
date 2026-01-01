@@ -12,4 +12,8 @@ router.get("/enrollments", paymentController.getEnrollmentsByStudent);
 // 3. Add payment for specific enrollment
 router.post("/", paymentController.addPaymentForEnrollment);
 
+//4. generate receipt
+router.get("/receipt", paymentController.getReceiptByEnrollmentId);
+
+
 module.exports = router;
