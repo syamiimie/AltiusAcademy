@@ -624,6 +624,14 @@ table.section th {
 .modal:not(.hidden) {
     display: flex;
 }
+
+/*If Unpaid*/
+.disabled-btn {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    pointer-events: none;
+ }
   
 
 .enrollcard-container {

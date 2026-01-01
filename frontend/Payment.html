@@ -95,6 +95,8 @@
 <script>
     const studentId = new URLSearchParams(window.location.search).get("studentId");
     let currentEnrollmentId = null;
+    let selectedEnrollmentId = null;
+    let paidEnrollmentSet = new Set();
 
     /* ===================== LOAD STUDENT DATA ===================== */
     async function loadStudentData() {
@@ -107,49 +109,131 @@
             document.getElementById("studentId").textContent = studentId;
             document.getElementById("totalFee").textContent = parseFloat(summaryData.TOTALPAID || 0).toFixed(2);
     
-            // 2️⃣ Fetch enrollments
-            const enrollRes = await fetch(`http://localhost:3000/enrollments?studentId=${studentId}`);
-            const enrollments = await enrollRes.json();
+            // 2️⃣ Fetch grouped enrollments by package
+            const enrollRes = await fetch(`http://localhost:3000/payment/enrollments?studentId=${studentId}`);
+            const packages = await enrollRes.json();
+
+            // DEBUG: Check what data you're getting
+            console.log("Backend response:", packages);
+            console.log("First item:", packages[0]);        
+
+
             const tbody = document.getElementById("EnrollmentTable");
             const emptyMessage = document.getElementById("emptyMessage");
             tbody.innerHTML = "";
-    
-            if (!enrollments || enrollments.length === 0) {
+
+            if (!packages || packages.length === 0) {
                 emptyMessage.hidden = false;
                 return;
             }
             emptyMessage.hidden = true;
-    
-            enrollments.forEach(e => {
+
+            // Update table headers for grouped view
+            document.querySelector("thead tr").innerHTML = `
+                <th>Package</th>
+                <th>Fee (RM)</th>
+                <th>Total Enrollments</th>
+                <th>Payment Status</th>
+                <th>Enrollment IDs</th>
+                <th>Actions</th>
+            `;
+
+            paidEnrollmentSet.clear();
+            packages.forEach(pkg => {
+                // Parse enrollment IDs from comma-separated string
+                const enrollmentIds = pkg.ENROLLMENT_IDS ? pkg.ENROLLMENT_IDS.split(', ') : [];
+                const paymentStatus = pkg.UNPAID_COUNT > 0 ? 
+                    `${pkg.UNPAID_COUNT} Unpaid, ${pkg.PAID_COUNT} Paid` : 
+                    'All Paid';
+
+                //Populate paid enrollments when loading data
+                if (pkg.PAID_ENROLLMENT_IDS) {
+                pkg.PAID_ENROLLMENT_IDS
+                    .split(", ")
+                    .forEach(id => paidEnrollmentSet.add(id));
+                }
+                
+                // Create dropdown for enrollment IDs
+                let enrollmentDropdown = `<select class="enrollment-select" onchange="onEnrollmentSelect(this.value, this.closest('tr'))">`;
+
+                enrollmentDropdown += '<option value="">Select Enrollment</option>';
+                enrollmentIds.forEach(id => {
+                    enrollmentDropdown += `<option value="${id}">${id}</option>`;
+                });
+                enrollmentDropdown += '</select>';
+
                 tbody.innerHTML += `
                     <tr>
-                        <td>${e.ENROLL_ID}</td>
-                        <td>${e.PACKAGE_NAME}</td>
-                        <td>${parseFloat(e.PACKAGE_FEE).toFixed(2)}</td>
-                        <td>${e.PAYMENTSTATUS}</td>
+                        <td>${pkg.PACKAGE_NAME}</td>
+                        <td>${pkg.PACKAGE_FEE ? parseFloat(pkg.PACKAGE_FEE).toFixed(2) : '0.00'}</td>
+                        <td>${pkg.ENROLLMENT_COUNT}</td>
+                        <td>${paymentStatus}</td>
+                        <td>${pkg.ENROLLMENT_IDS}</td>
                         <td>
-                            ${e.PAYMENTSTATUS === 'Unpaid'
-                                ? `<button class="button" onclick="openPaymentModal(${e.ENROLL_ID}, ${parseFloat(e.PACKAGE_FEE)})">Add Payment</button>`
-                                : `<a href="Receipt.html?enrollId=${e.ENROLL_ID}">View Receipt</a>`}
+                            <div class="action-buttons">
+                                ${enrollmentDropdown}
+
+                                <button class="button add-payment-btn disabled-btn" disabled title="Payment already completed" onclick="openPaymentModal(selectedEnrollmentId, ${pkg.PACKAGE_FEE || 0})">
+                                    Add Payment
+                                </button>
+
+                                <button class="button receipt-btn disabled-btn" disabled onclick="viewReceipt()">
+                                    View Receipt
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
             });
-    
+
         } catch (err) {
             console.error("Error loading student data:", err);
             alert("Failed to load student or enrollment data.");
         }
     }
+        
+    /* ===================== NEW FUNCTIONS FOR GROUPED VIEW ===================== */
+    function onEnrollmentSelect(enrollmentId, row) {
+        selectedEnrollmentId = enrollmentId || null;
+
+        const receiptBtn = row.querySelector(".receipt-btn");
+        const addPaymentBtn = row.querySelector(".add-payment-btn");
+
+        const isPaid = enrollmentId && paidEnrollmentSet.has(enrollmentId);
+
+        // VIEW RECEIPT
+        if (isPaid) {
+            receiptBtn.disabled = false;
+            receiptBtn.classList.remove("disabled-btn");
+        } else {
+            receiptBtn.disabled = true;
+            receiptBtn.classList.add("disabled-btn");
+        }
+
+        // ADD PAYMENT
+        if (!enrollmentId || isPaid) {
+            addPaymentBtn.disabled = true;
+            addPaymentBtn.classList.add("disabled-btn");
+        } else {
+            addPaymentBtn.disabled = false;
+            addPaymentBtn.classList.remove("disabled-btn");
+        }
+    }
+
     
     /* ===================== MODAL FUNCTIONS ===================== */
     function openPaymentModal(enrollmentId, fee) {
+        if (!enrollmentId) {
+            alert("Please select an enrollment ID first.");
+            return;
+        }
+
         currentEnrollmentId = enrollmentId;
         document.getElementById("paymentAmount").value = parseFloat(fee).toFixed(2);
-        document.getElementById("paymentDate").valueAsDate = new Date(); // default to today
+        document.getElementById("paymentDate").valueAsDate = new Date();
         document.getElementById("paymentModal").classList.remove("hidden");
     }
-    
+        
     function closePaymentModal() {
         currentEnrollmentId = null;
         document.getElementById("paymentModal").classList.add("hidden");
@@ -189,6 +273,15 @@
             alert(err.message);
         }
     }
+    // =====================RECEIPT=====================
+    function viewReceipt() {
+        if (!selectedEnrollmentId || !paidEnrollmentSet.has(selectedEnrollmentId)) {
+            alert("Receipt not available. Payment not made yet.");
+            return;
+        }
+        window.location.href = `Receipt.html?enrollId=${selectedEnrollmentId}`;
+    }
+
     
     /* ===================== INITIAL LOAD ===================== */
     document.addEventListener("DOMContentLoaded", loadStudentData);
