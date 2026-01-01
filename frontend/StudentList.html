@@ -129,15 +129,8 @@ function del(id) {
 }
 </script>
 
+<script>
 
-function del(id) {
-    if (confirm("Delete this student?")) {
-        fetch(`http://localhost:3000/students/${id}`, {
-            method: "DELETE"
-        }).then(() => location.reload());
-    }
-    return false;
-}
 function goStaffHome(){
     const staff = localStorage.getItem("staff");
 
