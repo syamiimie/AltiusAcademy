@@ -6,6 +6,7 @@ oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 /* ================= GET ALL ENROLLMENTS ================= */
 exports.getAllEnrollments = async (req, res) => {
   let conn;
+
   try {
     conn = await oracledb.getConnection(db);
 
@@ -13,15 +14,13 @@ exports.getAllEnrollments = async (req, res) => {
       SELECT
         e.Enroll_ID,
         e.Student_ID,
+        e.Package_ID,
         e.Enroll_Date,
         e.Enroll_Status,
 
         s.Student_Name,
 
-        p.Package_ID,
         p.Package_Name,
-        p.Duration,
-        p.Package_Fee,
 
         sub.Subject_Name,
 
@@ -53,109 +52,7 @@ exports.getAllEnrollments = async (req, res) => {
   }
 };
 
-/* ================= GET ENROLLMENT BY ENROLL ID ================= */
-exports.getEnrollmentById = async (req, res) => {
-  const { id } = req.params;
-  let conn;
-
-  try {
-    conn = await oracledb.getConnection(db);
-
-    const result = await conn.execute(
-      `
-      SELECT
-        e.Enroll_ID,
-        e.Student_ID,
-        e.Enroll_Date,
-        e.Enroll_Status,
-
-        s.Student_Name,
-
-        p.Package_ID,
-        p.Package_Name,
-        p.Duration,
-        p.Package_Fee,
-
-        sub.Subject_ID,
-        sub.Subject_Name,
-
-        c.Class_ID,
-        c.Class_Name,
-        c.Class_Day,
-        c.Class_Time,
-
-        t.Teacher_Name,
-
-        NVL(pay.Total_Fees, 0) AS Total_Fees_Paid
-      FROM ALTIUS_DB.Enrollment e
-      JOIN ALTIUS_DB.Student s ON e.Student_ID = s.Student_ID
-      JOIN ALTIUS_DB.Package p ON e.Package_ID = p.Package_ID
-      JOIN ALTIUS_DB.Subject sub ON p.Package_ID = sub.Package_ID
-      JOIN ALTIUS_DB.Class c ON sub.Subject_ID = c.Subject_ID
-      LEFT JOIN ALTIUS_DB.Teacher t ON c.Teacher_ID = t.Teacher_ID
-      LEFT JOIN ALTIUS_DB.Payment pay ON e.Payment_ID = pay.Payment_ID
-      WHERE e.Enroll_ID = :id
-      `,
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).send("Enrollment not found");
-    }
-
-    res.json(result.rows); // multiple rows expected
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching enrollment");
-  } finally {
-    if (conn) await conn.close();
-  }
-};
-
-/* ========== GET ENROLLMENTS BY STUDENT ID (PATH PARAM) ========== */
-exports.getEnrollmentsByStudentId = async (req, res) => {
-  const { id } = req.params;
-  let conn;
-
-  try {
-    conn = await oracledb.getConnection(db);
-
-    const result = await conn.execute(
-      `
-      SELECT
-        e.Enroll_ID,
-        e.Student_ID,
-        e.Enroll_Date,
-        e.Enroll_Status,
-
-        s.Student_Name,
-
-        p.Package_ID,
-        p.Package_Name,
-
-        NVL(pay.Total_Fees, 0) AS Total_Fees_Paid
-      FROM ALTIUS_DB.Enrollment e
-      JOIN ALTIUS_DB.Student s ON e.Student_ID = s.Student_ID
-      JOIN ALTIUS_DB.Package p ON e.Package_ID = p.Package_ID
-      LEFT JOIN ALTIUS_DB.Payment pay ON e.Payment_ID = pay.Payment_ID
-      WHERE e.Student_ID = :id
-      ORDER BY e.Enroll_ID DESC
-      `,
-      [id]
-    );
-
-    res.json(result.rows);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching enrollments by student");
-  } finally {
-    if (conn) await conn.close();
-  }
-};
-
-/* ================= ADD NEW ENROLLMENT ================= */
+/* ================= ADD ENROLLMENT ================= */
 exports.addEnrollment = async (req, res) => {
   const { Student_ID, Package_ID, Enroll_Status } = req.body;
   let conn;
@@ -196,8 +93,9 @@ exports.updateEnrollment = async (req, res) => {
     const result = await conn.execute(
       `
       UPDATE ALTIUS_DB.Enrollment
-      SET Package_ID = :Package_ID,
-          Enroll_Status = :Enroll_Status
+      SET
+        Package_ID = :Package_ID,
+        Enroll_Status = :Enroll_Status
       WHERE Enroll_ID = :id
       `,
       [Package_ID, Enroll_Status, id],
@@ -241,47 +139,6 @@ exports.deleteEnrollment = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Error deleting enrollment");
-  } finally {
-    if (conn) await conn.close();
-  }
-};
-
-/* ================= GET ENROLLMENTS BY STUDENT (QUERY PARAM) ================= */
-exports.getEnrollmentsByStudent = async (req, res) => {
-  const studentId = Number(req.query.studentId);
-
-  if (!studentId || isNaN(studentId)) {
-    return res.status(400).json({ message: "Valid studentId is required" });
-  }
-
-  let conn;
-
-  try {
-    conn = await oracledb.getConnection(db);
-
-    const result = await conn.execute(
-      `
-      SELECT 
-        e.Enroll_ID,
-        p.Package_Name,
-        p.Package_Fee,
-        CASE 
-          WHEN e.Payment_ID IS NULL THEN 'Unpaid'
-          ELSE 'Paid'
-        END AS PAYMENTSTATUS
-      FROM ALTIUS_DB.Enrollment e
-      JOIN ALTIUS_DB.Package p ON e.Package_ID = p.Package_ID
-      WHERE e.Student_ID = :studentId
-      ORDER BY e.Enroll_ID
-      `,
-      [studentId]
-    );
-
-    res.json(result.rows);
-
-  } catch (err) {
-    console.error("Error fetching enrollments by student:", err);
-    res.status(500).send("Error fetching enrollments by student");
   } finally {
     if (conn) await conn.close();
   }

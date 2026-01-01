@@ -6,20 +6,16 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        .subject-card-container {
-            display: grid;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .subject-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
+        .preview-box {
             border: 1px solid #ddd;
+            padding: 10px;
             border-radius: 6px;
             background: #f9f9f9;
+        }
+
+        .danger {
+            background-color: #d9534f;
+            color: white;
         }
     </style>
 </head>
@@ -45,113 +41,67 @@
 </header>
 
 <main class="content">
-    <h2 class="titles">Edit Student Enrollments</h2>
+    <div><a href="EnrollmentList.html" class="button">Back</a></div><br>
+    <h2>Edit Enrollment</h2> 
     <div id="enrollmentCards"></div>
 </main>
 
 <script>
 const params = new URLSearchParams(window.location.search);
 const studentId = params.get("studentId");
-
 const container = document.getElementById("enrollmentCards");
 
-let students = [];
 let packages = [];
 let subjects = [];
 
-/* ===== LOAD DATA ===== */
+/* LOAD DATA */
 Promise.all([
-    fetch("http://localhost:3000/students").then(r => r.json()),
     fetch("http://localhost:3000/packages").then(r => r.json()),
     fetch("http://localhost:3000/subjects").then(r => r.json()),
     fetch("http://localhost:3000/enrollments").then(r => r.json())
-]).then(([stu, pack, subs, enrollments]) => {
+]).then(([pack, subs, enrollments]) => {
 
-    students = stu;
     packages = pack;
     subjects = subs;
 
-    const studentEnrollments = enrollments.filter(
-        e => e.STUDENT_ID == studentId
-    );
+    const filtered = enrollments.filter(e => e.STUDENT_ID == studentId);
 
-    if (studentEnrollments.length === 0) {
-        container.innerHTML = "<p>No enrollments found.</p>";
-        return;
+const uniqueEnrollments = {};
+filtered.forEach(e => {
+    if (!uniqueEnrollments[e.ENROLL_ID]) {
+        uniqueEnrollments[e.ENROLL_ID] = e;
     }
-
-    /* ===== GROUP BY ENROLL_ID ===== */
-    const grouped = {};
-
-    studentEnrollments.forEach(row => {
-        if (!grouped[row.ENROLL_ID]) {
-            grouped[row.ENROLL_ID] = {
-                ...row,
-                subjects: []
-            };
-        }
-
-        grouped[row.ENROLL_ID].subjects.push({
-            SUBJECT_ID: row.SUBJECT_ID,
-            SUBJECT_NAME: row.SUBJECT_NAME
-        });
-    });
-
-    Object.values(grouped).forEach(e => renderEnrollmentCard(e));
 });
 
-/* ===== RENDER CARD ===== */
+Object.values(uniqueEnrollments).forEach(renderEnrollmentCard);
+
+});
+
+/* RENDER CARD */
 function renderEnrollmentCard(e) {
 
-    const studentName =
-        students.find(s => s.STUDENT_ID == e.STUDENT_ID)?.STUDENT_NAME || "-";
-
-    const studentOptions = students.map(s =>
-        `<option ${s.STUDENT_ID == e.STUDENT_ID ? "selected" : ""}>
-            ${s.STUDENT_NAME}
-        </option>`
-    ).join("");
-
-    const packageOptions = packages.map(p =>
-        `<option value="${p.PACKAGE_ID}" ${p.PACKAGE_ID == e.PACKAGE_ID ? "selected" : ""}>
-            ${p.PACKAGE_NAME}
-        </option>`
-    ).join("");
+    const subjectList = subjects
+        .filter(s => s.PACKAGE_ID == e.PACKAGE_ID)
+        .map(s => `<div>• ${s.SUBJECT_NAME}</div>`)
+        .join("");
 
     container.innerHTML += `
         <form class="form" onsubmit="updateEnrollment(event, ${e.ENROLL_ID})">
 
-            <h3>${studentName} — Enrollment #${e.ENROLL_ID}</h3>
-
-            <label>Student</label>
-            <select class="select-class" disabled>
-                ${studentOptions}
-            </select>
+            <h3>${e.STUDENT_NAME} — Enrollment #${e.ENROLL_ID}</h3>
 
             <label>Package</label>
             <select class="select-class" data-package onchange="onPackageChange(this)">
-                ${packageOptions}
+                ${packages.map(p =>
+                    `<option value="${p.PACKAGE_ID}" ${p.PACKAGE_ID == e.PACKAGE_ID ? "selected" : ""}>
+                        ${p.PACKAGE_NAME}
+                    </option>`
+                ).join("")}
             </select>
 
-            <label>Subjects</label>
-            <div class="subject-card-container">
-                ${e.subjects.map(s => `
-                    <div class="subject-card">
-                        <strong>${s.SUBJECT_NAME}</strong>
-
-                        <select class="select-class subject-select" disabled>
-                            ${subjects
-                                .filter(sub => sub.PACKAGE_ID == e.PACKAGE_ID)
-                                .map(sub =>
-                                    `<option value="${sub.SUBJECT_ID}"
-                                        ${sub.SUBJECT_ID == s.SUBJECT_ID ? "selected" : ""}>
-                                        ${sub.SUBJECT_NAME}
-                                    </option>`
-                                ).join("")
-                            }
-                        </select>
-                    </div>
-                `).join("")}
+            <label>Subjects in Package</label>
+            <div class="preview-box" data-subject-preview>
+                ${subjectList || "<em>No subjects</em>"}
             </div>
 
             <label>Status</label>
@@ -163,50 +113,64 @@ function renderEnrollmentCard(e) {
 
             <div class="card-actions">
                 <button class="button" type="submit">Update</button>
-                <a href="EnrollmentList.html" class="button">Back</a>
+                <button type="button" class="button danger"
+                    onclick="deleteEnrollment(${e.ENROLL_ID})">
+                    Delete
+                </button>
             </div>
 
         </form>
     `;
 }
 
-/* ===== ENABLE SUBJECT EDITING ON PACKAGE CHANGE ===== */
-function onPackageChange(packageSelect) {
-    const form = packageSelect.closest("form");
-    const subjectSelects = form.querySelectorAll(".subject-select");
+/* PACKAGE CHANGE → UPDATE PREVIEW */
+function onPackageChange(select) {
+    const form = select.closest("form");
+    const preview = form.querySelector("[data-subject-preview]");
 
-    subjectSelects.forEach(select => {
-        select.disabled = false;
-        select.innerHTML = "";
+    preview.innerHTML = "";
 
-        subjects
-            .filter(s => s.PACKAGE_ID == packageSelect.value)
-            .forEach(s => {
-                select.innerHTML +=
-                    `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
-            });
-    });
+    subjects
+        .filter(s => s.PACKAGE_ID == select.value)
+        .forEach(s => preview.innerHTML += `<div>• ${s.SUBJECT_NAME}</div>`);
+
+    if (preview.innerHTML === "") {
+        preview.innerHTML = "<em>No subjects</em>";
+    }
 }
 
-/* ===== UPDATE (NO SUBJECT_ID) ===== */
+/* UPDATE ENROLLMENT */
 function updateEnrollment(event, enrollId) {
     event.preventDefault();
 
     const form = event.target;
-    const packageId = form.querySelector("[data-package]").value;
-    const status = form.querySelector("[data-status]").value;
 
     fetch(`http://localhost:3000/enrollments/${enrollId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            Package_ID: packageId,
-            Enroll_Status: status
+            Package_ID: form.querySelector("[data-package]").value,
+            Enroll_Status: form.querySelector("[data-status]").value
         })
     })
     .then(res => {
         if (!res.ok) throw new Error("Update failed");
         alert("Enrollment updated successfully");
+    })
+    .catch(err => alert(err.message));
+}
+
+/* DELETE ENROLLMENT */
+function deleteEnrollment(enrollId) {
+    if (!confirm("Are you sure you want to delete this enrollment?")) return;
+
+    fetch(`http://localhost:3000/enrollments/${enrollId}`, {
+        method: "DELETE"
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Delete failed");
+        alert("Enrollment deleted successfully");
+        location.reload();
     })
     .catch(err => alert(err.message));
 }

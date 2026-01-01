@@ -35,11 +35,10 @@
     <label>Package</label>
     <select id="packageSelect" class="select-class" required></select>
 
-    <label>Subject</label>
-    <select id="subjectSelect" class="select-class" required></select>
-
-    <label>Class</label>
-    <select id="classSelect" class="select-class" required></select>
+    <label>Subjects in Package</label>
+    <div id="subjectPreview" class="preview-box">
+        <em>Select a package to view subjects</em>
+    </div>
 
     <label>Status</label>
     <select id="statusSelect" class="select-class">
@@ -56,23 +55,19 @@
 <script>
 const studentSelect = document.getElementById("studentSelect");
 const packageSelect = document.getElementById("packageSelect");
-const subjectSelect = document.getElementById("subjectSelect");
-const classSelect   = document.getElementById("classSelect");
-const statusSelect  = document.getElementById("statusSelect");
+const subjectPreview = document.getElementById("subjectPreview");
+const statusSelect = document.getElementById("statusSelect");
 
 let subjects = [];
-let classes  = [];
 
-/* ===== LOAD DATA ===== */
+/* LOAD DATA */
 Promise.all([
     fetch("http://localhost:3000/students").then(r => r.json()),
     fetch("http://localhost:3000/packages").then(r => r.json()),
-    fetch("http://localhost:3000/subjects").then(r => r.json()),
-    fetch("http://localhost:3000/classes").then(r => r.json())
-]).then(([students, packages, subs, cls]) => {
+    fetch("http://localhost:3000/subjects").then(r => r.json())
+]).then(([students, packages, subs]) => {
 
     subjects = subs;
-    classes = cls;
 
     studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
     students.forEach(s =>
@@ -87,32 +82,23 @@ Promise.all([
     );
 });
 
-/* ===== FILTER SUBJECT BY PACKAGE ===== */
+/* SHOW SUBJECT PREVIEW */
 packageSelect.addEventListener("change", () => {
-    subjectSelect.innerHTML = `<option value="">-- Select Subject --</option>`;
-    classSelect.innerHTML   = `<option value="">-- Select Class --</option>`;
+    subjectPreview.innerHTML = "";
 
-    subjects
-      .filter(s => s.PACKAGE_ID == packageSelect.value)
-      .forEach(s =>
-        subjectSelect.innerHTML +=
-        `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`
-      );
+    const filtered = subjects.filter(s => s.PACKAGE_ID == packageSelect.value);
+
+    if (filtered.length === 0) {
+        subjectPreview.innerHTML = "<em>No subjects found</em>";
+        return;
+    }
+
+    filtered.forEach(s => {
+        subjectPreview.innerHTML += `<div>• ${s.SUBJECT_NAME}</div>`;
+    });
 });
 
-/* ===== FILTER CLASS BY SUBJECT ===== */
-subjectSelect.addEventListener("change", () => {
-    classSelect.innerHTML = `<option value="">-- Select Class --</option>`;
-
-    classes
-      .filter(c => c.SUBJECT_ID == subjectSelect.value)
-      .forEach(c =>
-        classSelect.innerHTML +=
-        `<option value="${c.CLASS_ID}">${c.CLASS_NAME}</option>`
-      );
-});
-
-/* ===== SUBMIT (ONLY PACKAGE_ID IS SAVED) ===== */
+/* SUBMIT */
 document.getElementById("enrollForm").addEventListener("submit", e => {
     e.preventDefault();
 
