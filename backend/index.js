@@ -5,6 +5,8 @@ const studentRoutes = require("./routes/student.routes");
 const staffRoutes = require("./routes/staff.routes");
 const reportRoutes = require("./routes/report.routes");
 const attendanceRoutes = require("./routes/attendance.routes");
+const paymentRoutes = require("./routes/payment.routes");
+
 
 const app = express();
 const PORT = 3000;
@@ -23,6 +25,7 @@ app.use("/subjects", require("./routes/subject.routes"));
 app.use("/reports", reportRoutes);
 app.use("/enrollments", require("./routes/enrollment.routes"));
 app.use("/attendance", attendanceRoutes);
+app.use("/payment", paymentRoutes);
 
 
 app.listen(PORT, () => {

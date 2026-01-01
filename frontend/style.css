@@ -471,10 +471,10 @@ table.section th {
 .payment-table th {
     font-weight: bold;
 }
-
+/* 
 .payment-table tr:hover {
-    background-color: #f9f9f9;
-}
+    background-color: #2d0133;
+} */
 
 /* RECEIPT BUTTON */
 .btn-receipt {

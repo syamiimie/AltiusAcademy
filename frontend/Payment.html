@@ -63,6 +63,7 @@
             <thead>
                 <tr>
                     <th>Payment ID</th>
+                    <th>Payment Name</th>
                     <th>Payment Date</th>
                     <th>Amount (RM)</th>
                     <th>Receipt</th>
@@ -84,7 +85,7 @@
 <script>
     const studentId = new URLSearchParams(window.location.search).get("studentId");
 
-    fetch(`http://localhost:300/payment?studentId=${studentId}`)
+    fetch(`http://localhost:3000/payment?studentId=${studentId}`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("studentName").textContent = data.studentName;
@@ -105,6 +106,7 @@
                 table.innerHTML += `
                     <tr>
                         <td>${p.PAYMENT_ID}</td>
+                        <td>${p.PAYMENT_NAME}</td>
                         <td>${p.PAYMENT_DATE}</td>
                         <td>${p.TOTAL_FEES.toFixed(2)}</td>
                         <td>
