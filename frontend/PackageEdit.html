@@ -41,7 +41,6 @@
 <tr><td>Name:</td><td><input id="Package_Name"></td></tr>
 <tr><td>Fee:</td><td><input type="number" id="Package_Fee"></td></tr>
 <tr><td>Duration:</td><td><input id="Duration"></td></tr>
-<tr><td>Subjects:</td><td><input id="Subjects"></td></tr>
 
 <tr>
 <td colspan="2" style="text-align:center;">
@@ -61,7 +60,6 @@ fetch(`http://localhost:3000/packages/${id}`)
     Package_Name.value = p.PACKAGE_NAME || "";
     Package_Fee.value = p.PACKAGE_FEE || "";
     Duration.value = p.DURATION || "";
-    Subjects.value = p.SUBJECTS || "";
 });
 
 document.querySelector("form").addEventListener("submit", e=>{
@@ -74,7 +72,6 @@ document.querySelector("form").addEventListener("submit", e=>{
             name: Package_Name.value.trim(),
             fee: Package_Fee.value,
             duration: Duration.value.trim(),
-            subjects: Subjects.value.trim()
         })
     }).then(()=>{
         alert("Package updated");

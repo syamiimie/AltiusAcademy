@@ -71,8 +71,34 @@ fetch("http://localhost:3000/students")
 .then(res => res.json())
 .then(data => {
     const table = document.getElementById("studentTable");
+    table.innerHTML = "";
 
     data.forEach(s => {
+
+        let typeDisplay = "";
+
+        if (s.STUDENT_TYPE === "Primary") {
+            typeDisplay = `
+              <div class="type-box">
+                <div class="type-main">Primary</div>
+                <div class="type-sub">
+                  Year: ${s.STUDENT_LEVEL ?? "-"}
+                </div>
+              </div>
+            `;
+        }
+
+        if (s.STUDENT_TYPE === "Secondary") {
+            typeDisplay = `
+              <div class="type-box">
+                <div class="type-main">Secondary</div>
+                <div class="type-sub">
+                  Form ${s.STUDENT_FORM ?? "-"} · ${s.STREAM ?? "No Stream"}
+                </div>
+              </div>
+            `;
+        }
+
         table.innerHTML += `
         <tr>
             <td>${s.STUDENT_ID}</td>
@@ -81,10 +107,9 @@ fetch("http://localhost:3000/students")
             <td>${s.STUDENT_ADDRESS ?? "-"}</td>
             <td>${s.STUDENT_EMAIL ?? "-"}</td>
             <td>${s.STUDENT_PHONENUM ?? "-"}</td>
-            <td>${s.STUDENT_TYPE}</td>
+            <td>${typeDisplay}</td>
             <td class="action-cell">
                 <a href="StudentEdit.html?id=${s.STUDENT_ID}" class="button">Edit</a>
-
                 <form onsubmit="return del(${s.STUDENT_ID});" style="display:inline;">
                     <button type="submit" class="button">Delete</button>
                 </form>
@@ -93,6 +118,17 @@ fetch("http://localhost:3000/students")
         `;
     });
 });
+
+function del(id) {
+    if (confirm("Delete this student?")) {
+        fetch(`http://localhost:3000/students/${id}`, {
+            method: "DELETE"
+        }).then(() => location.reload());
+    }
+    return false;
+}
+</script>
+
 
 function del(id) {
     if (confirm("Delete this student?")) {

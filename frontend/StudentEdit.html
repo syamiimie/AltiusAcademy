@@ -1,114 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Altius Academy | Students Details</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+  <title>Altius Academy | Edit Student</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header class="top-bar">
-    <div class="logo">
-        <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
-        </a>
-    </div>
-
-    <nav class="nav-menu">
-        <a href="TeacherList.html">Teacher</a>
-        <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
-        <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html" class="active">Subject</a>
-        <a href="report.html">Report</a>
-    </nav>
-
-    <!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
-        <button class="button" onclick="logout()">Logout</button>
-        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
-    </div>
-</header>
-
-<!-- MAIN CONTENT -->
 <main class="content">
 
 <form id="editForm">
-    <table class="form">
+<table class="form">
 
-        <tr>
-            <td class="avatar" colspan="2" style="text-align:center;">🎓</td>
-        </tr>
+<tr>
+  <td colspan="2" class="titles">Edit Student</td>
+</tr>
 
-        <tr>
-            <td class="titles" colspan="2">Edit Student Details</td>
-        </tr>
+<tr>
+  <td>Name</td>
+  <td><input type="text" id="student_name" required></td>
+</tr>
 
-        <tr>
-            <td>Name:</td>
-            <td>
-                <input type="text" id="student_name" style="width:100%;" required>
-            </td>
-        </tr>
+<tr>
+  <td>IC</td>
+  <td><input type="text" id="student_ic"></td>
+</tr>
 
-        <tr>
-            <td>IC:</td>
-            <td>
-                <input type="text" id="student_ic" style="width:100%;" required>
-            </td>
-        </tr>
+<tr>
+  <td>Address</td>
+  <td><input type="text" id="student_address"></td>
+</tr>
 
-        <tr>
-            <td>Address:</td>
-            <td>
-                <input type="text" id="student_address" style="width:100%;" required>
-            </td>
-        </tr>
+<tr>
+  <td>Email</td>
+  <td><input type="email" id="student_email"></td>
+</tr>
 
-        <tr>
-            <td>Email:</td>
-            <td>
-                <input type="text" id="student_email"
-                       placeholder="(Example: staff123@gmail.com)"
-                       style="width:100%;" required>
-            </td>
-        </tr>
+<tr>
+  <td>Phone</td>
+  <td><input type="text" id="student_phone"></td>
+</tr>
 
-        <tr>
-            <td>Phone Number:</td>
-            <td>
-                <input type="text" id="student_phone"
-                       placeholder="(Example: 0123456789)"
-                       style="width:100%;" required>
-            </td>
-        </tr>
+<tr>
+  <td>Type</td>
+  <td>
+    <label>
+      <input type="radio" name="student_type" value="Primary">
+      Primary
+    </label>
+    &nbsp;
+    <label>
+      <input type="radio" name="student_type" value="Secondary">
+      Secondary
+    </label>
+  </td>
+</tr>
 
-        <tr>
-            <td>Type:</td>
-            <td>
-                <label>
-                    <input type="radio" name="student_type" value="Primary" required>                  
-                    Primary 
-                </label>
-                &nbsp;
-                <label>   
-                    <input type="radio" name="student_type" value="Secondary">
-                    Secondary 
-                </label>
-            </td>
-        </tr>
+<!-- PRIMARY -->
+<tr id="primaryRow" style="display:none;">
+  <td>Year</td>
+  <td>
+    <select id="student_year">
+      <option value="">-- Select Year --</option>
+      <option value="Year 4">Year 4</option>
+      <option value="Year 5">Year 5</option>
+      <option value="Year 6">Year 6</option>
+    </select>
+  </td>
+</tr>
 
-        <tr>
-            <td colspan="2" style="text-align:center;">
-                <button type="submit" class="button">Save</button>
-            </td>
-        </tr>
+<!-- SECONDARY -->
+<tr id="secondaryRow1" style="display:none;">
+  <td>Form</td>
+  <td>
+    <select id="student_form">
+      <option value="">-- Select Form --</option>
+      <option value="1">Form 1</option>
+      <option value="2">Form 2</option>
+      <option value="3">Form 3</option>
+      <option value="4">Form 4</option>
+      <option value="5">Form 5</option>
+    </select>
+  </td>
+</tr>
 
-    </table>
+<tr id="secondaryRow2" style="display:none;">
+  <td>Stream</td>
+  <td>
+    <select id="student_stream">
+      <option value="No Stream">No Stream</option>
+      <option value="Science">Science</option>
+      <option value="Social Science">Social Science</option>
+    </select>
+  </td>
+</tr>
+
+<tr>
+  <td colspan="2" style="text-align:center;">
+    <button type="submit" class="button">Save</button>
+  </td>
+</tr>
+
+</table>
 </form>
 
 </main>
@@ -116,55 +111,64 @@
 <script>
 const id = new URLSearchParams(window.location.search).get("id");
 
-// Load existing student data
-fetch(`http://localhost:3000/students/${id}`)
-.then(res => res.json())
-.then(s => {
-    document.getElementById("student_name").value = s.STUDENT_NAME || "";
-    document.getElementById("student_ic").value = s.STUDENT_IC || "";
-    document.getElementById("student_address").value = s.STUDENT_ADDRESS || "";
-    document.getElementById("student_email").value = s.STUDENT_EMAIL || "";
-    document.getElementById("student_phone").value = s.STUDENT_PHONENUM || "";
-
-    if (s.STUDENT_TYPE === "Secondary") {
-        document.querySelector('input[value="Secondary"]').checked = true;
-    } else {
-        document.querySelector('input[value="Primary"]').checked = true;
-    }
-});
-
-// Update student
-document.getElementById("editForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    const payload = {
-        name: document.getElementById("student_name").value.trim(),
-        ic: document.getElementById("student_ic").value.trim(),
-        address: document.getElementById("student_address").value.trim(),
-        email: document.getElementById("student_email").value.trim(),
-        phone: document.getElementById("student_phone").value.trim(),
-        type: document.querySelector('input[name="student_type"]:checked').value
-    };
-
-    await fetch(`http://localhost:3000/students/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    location.href = "StudentList.html";
-});
-function goStaffHome(){
-    const staff = localStorage.getItem("staff");
-
-    if(!staff){
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
-
-    window.location.href = "StaffHomepage.html";
+function toggleSubtype(type){
+  primaryRow.style.display = type === "Primary" ? "table-row" : "none";
+  secondaryRow1.style.display = type === "Secondary" ? "table-row" : "none";
+  secondaryRow2.style.display = type === "Secondary" ? "table-row" : "none";
 }
+
+// LOAD DATA
+fetch(`http://localhost:3000/students/${id}`)
+  .then(res => res.json())
+  .then(s => {
+    student_name.value = s.STUDENT_NAME;
+    student_ic.value = s.STUDENT_IC;
+    student_address.value = s.STUDENT_ADDRESS;
+    student_email.value = s.STUDENT_EMAIL;
+    student_phone.value = s.STUDENT_PHONENUM;
+
+    document
+      .querySelector(`input[value="${s.STUDENT_TYPE}"]`)
+      .checked = true;
+
+    toggleSubtype(s.STUDENT_TYPE);
+
+    if (s.STUDENT_TYPE === "Primary") {
+      student_year.value = s.STUDENT_LEVEL;
+    } else {
+      student_form.value = s.STUDENT_FORM;
+      student_stream.value = s.STREAM;
+    }
+  });
+
+document.querySelectorAll('input[name="student_type"]').forEach(r =>
+  r.addEventListener("change", () => toggleSubtype(r.value))
+);
+
+// SUBMIT
+editForm.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const payload = {
+    name: student_name.value,
+    ic: student_ic.value,
+    address: student_address.value,
+    email: student_email.value,
+    phone: student_phone.value,
+    type: document.querySelector('input[name="student_type"]:checked').value,
+    level: student_year.value,
+    form: student_form.value,
+    stream: student_stream.value
+  };
+
+  await fetch(`http://localhost:3000/students/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  location.href = "StudentList.html";
+});
 </script>
 
 </body>
