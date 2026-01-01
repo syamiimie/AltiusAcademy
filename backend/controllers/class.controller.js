@@ -194,29 +194,37 @@ exports.getClassListWithPrereq = async (req, res) => {
         c.CLASS_TIME,
         c.CLASS_DAY,
         s.SUBJECT_NAME,
+        p.PACKAGE_NAME,
         t.TEACHER_NAME,
-        LISTAGG(cp.PREREQUISITE_CLASS_ID, ', ')
-          WITHIN GROUP (ORDER BY cp.PREREQUISITE_CLASS_ID) AS PREREQUISITES
+        LISTAGG(cp2.CLASS_NAME, ', ')
+          WITHIN GROUP (ORDER BY cp2.CLASS_NAME) AS PREREQUISITES
       FROM CLASS c
-      LEFT JOIN SUBJECT s
+      JOIN SUBJECT s
         ON c.SUBJECT_ID = s.SUBJECT_ID
-      LEFT JOIN TEACHER t
+      JOIN PACKAGE p
+        ON s.PACKAGE_ID = p.PACKAGE_ID
+      JOIN TEACHER t
         ON c.TEACHER_ID = t.TEACHER_ID
       LEFT JOIN CLASS_PREREQUISITE cp
         ON c.CLASS_ID = cp.CLASS_ID
+      LEFT JOIN CLASS cp2
+        ON cp.PREREQUISITE_CLASS_ID = cp2.CLASS_ID
       GROUP BY
         c.CLASS_ID,
         c.CLASS_NAME,
         c.CLASS_TIME,
         c.CLASS_DAY,
         s.SUBJECT_NAME,
+        p.PACKAGE_NAME,
         t.TEACHER_NAME
       ORDER BY c.CLASS_ID
     `);
 
     res.json(r.rows);
+
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    console.error(e);
+    res.status(500).json({ message: "Failed to load classes" });
   } finally {
     if (conn) await conn.close();
   }
