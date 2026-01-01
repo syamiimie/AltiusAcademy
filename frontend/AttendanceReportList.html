@@ -44,13 +44,19 @@
         <a href="TeacherList.html">Teacher</a>
         <a href="StudentList.html">Student</a>
         <a href="ClassList.html">Class</a>
+        <a href="EnrollmentList.html" class="active">Enrollment</a>
         <a href="PackageList.html">Package</a>
+        <a href="SubjectList.html">Subject</a>
+        <a href="AttendanceList.html">Attendance</a>
         <a href="report.html">Report</a>
     </nav>
 
-    <div class="user-icon" onclick="goStaffHome()" style="cursor:pointer;">
-    👤
-</div>
+        <!-- USER ICON + LOGOUT -->
+    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+        <button class="button" onclick="logout()">Logout</button>
+        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+        
+    </div>
 
 </header>
 
