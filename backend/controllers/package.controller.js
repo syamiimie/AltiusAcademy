@@ -26,7 +26,8 @@ exports.getPackageById = async (req, res) => {
   try {
     conn = await oracledb.getConnection(db);
     const r = await conn.execute(
-      `SELECT * FROM "PACKAGE" WHERE PACKAGE_ID = :id`,
+      `SELECT * FROM "PACKAGE" WHERE PACKAGE_ID = :id
+      GROUP BY PACKAGE_NAME`,
       { id: req.params.id }
     );
     res.json(r.rows[0]);
