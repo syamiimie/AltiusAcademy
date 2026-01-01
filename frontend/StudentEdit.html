@@ -8,32 +8,30 @@
 </head>
 
 <body>
-  <!-- HEADER -->
+
+<!-- HEADER -->
 <header class="top-bar">
-    <div class="logo">
-        <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
-        </a>
-    </div>
+  <div class="logo">
+    <a href="StaffHomepage.html">
+      <img src="images/logo1.png" alt="Altius Academy">
+    </a>
+  </div>
 
-    <nav class="nav-menu">
-        <a href="TeacherList.html">Teacher</a>
-        <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
-        <a href="EnrollmentList.html" class="active">Enrollment</a>
-        <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html" class="active">Subject</a>
-        <a href="AttendanceList.html">Attendance</a>
-        <a href="report.html">Report</a>
-    </nav>
+  <nav class="nav-menu">
+    <a href="TeacherList.html">Teacher</a>
+    <a href="StudentList.html">Student</a>
+    <a href="ClassList.html">Class</a>
+    <a href="EnrollmentList.html" class="active">Enrollment</a>
+    <a href="PackageList.html">Package</a>
+    <a href="SubjectList.html" class="active">Subject</a>
+    <a href="AttendanceList.html">Attendance</a>
+    <a href="report.html">Report</a>
+  </nav>
 
-    <!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
-        <button class="button" onclick="logout()">Logout</button>
-        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
-    </div>
-
+  <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+    <button class="button" onclick="logout()">Logout</button>
+    <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+  </div>
 </header>
 
 <main class="content">
@@ -139,35 +137,48 @@
 const id = new URLSearchParams(window.location.search).get("id");
 
 function toggleSubtype(type){
-  primaryRow.style.display = type === "Primary" ? "table-row" : "none";
-  secondaryRow1.style.display = type === "Secondary" ? "table-row" : "none";
-  secondaryRow2.style.display = type === "Secondary" ? "table-row" : "none";
+  document.getElementById("primaryRow").style.display =
+    type === "Primary" ? "table-row" : "none";
+
+  document.getElementById("secondaryRow1").style.display =
+    type === "Secondary" ? "table-row" : "none";
+
+  document.getElementById("secondaryRow2").style.display =
+    type === "Secondary" ? "table-row" : "none";
 }
 
-// LOAD DATA
+// 🔥 LOAD & AUTO-FILL DATA
 fetch(`http://localhost:3000/students/${id}`)
   .then(res => res.json())
   .then(s => {
-    student_name.value = s.STUDENT_NAME;
-    student_ic.value = s.STUDENT_IC;
-    student_address.value = s.STUDENT_ADDRESS;
-    student_email.value = s.STUDENT_EMAIL;
-    student_phone.value = s.STUDENT_PHONENUM;
 
+    // INPUTS
+    student_name.value = s.STUDENT_NAME ?? "";
+    student_ic.value = s.STUDENT_IC ?? "";
+    student_address.value = s.STUDENT_ADDRESS ?? "";
+    student_email.value = s.STUDENT_EMAIL ?? "";
+    student_phone.value = s.STUDENT_PHONENUM ?? "";
+
+    // RADIO
     document
-      .querySelector(`input[value="${s.STUDENT_TYPE}"]`)
+      .querySelector(`input[name="student_type"][value="${s.STUDENT_TYPE}"]`)
       .checked = true;
 
+    // 🔥 SHOW FIRST
     toggleSubtype(s.STUDENT_TYPE);
 
+    // 🔥 DROPDOWN AUTO SELECT
     if (s.STUDENT_TYPE === "Primary") {
       student_year.value = s.STUDENT_YEAR;
-    } else {
-      student_form.value = s.STUDENT_FORM;
+    }
+
+    if (s.STUDENT_TYPE === "Secondary") {
+      student_form.value = String(s.STUDENT_FORM); // 🔥 IMPORTANT
       student_stream.value = s.STREAM;
     }
   });
 
+// Toggle when user changes type
 document.querySelectorAll('input[name="student_type"]').forEach(r =>
   r.addEventListener("change", () => toggleSubtype(r.value))
 );
@@ -194,18 +205,17 @@ editForm.addEventListener("submit", async e => {
     body: JSON.stringify(payload)
   });
 
-  location.href = "StudentList.html";
+  window.location.href = "StudentList.html";
 });
+
 function goStaffHome(){
-    const staff = localStorage.getItem("staff");
-
-    if(!staff){
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
-
-    window.location.href = "StaffHomepage.html";
+  const staff = localStorage.getItem("staff");
+  if(!staff){
+    alert("Please login first");
+    window.location.href = "login.html";
+    return;
+  }
+  window.location.href = "StaffHomepage.html";
 }
 </script>
 
