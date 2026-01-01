@@ -17,6 +17,7 @@
         <a href="TeacherList.html">Teacher</a>
         <a href="StudentList.html" class="active">Student</a>
         <a href="ClassList.html">Class</a>
+        <a href="EnrollmentList.html" class="active">Enrollment</a>
         <a href="PackageList.html">Package</a>
         <a href="SubjectList.html">Subject</a>
         <a href="report.html">Report</a>
@@ -124,7 +125,7 @@
                         <td>
                             ${e.PAYMENTSTATUS === 'Unpaid'
                                 ? `<button class="button" onclick="openPaymentModal(${e.ENROLL_ID}, ${parseFloat(e.PACKAGE_FEE)})">Add Payment</button>`
-                                : `<a href="Receipt.html?id=${e.ENROLL_ID}">View Receipt</a>`}
+                                : `<a href="Receipt.html?enrollId=${e.ENROLL_ID}">View Receipt</a>`}
                         </td>
                     </tr>
                 `;
