@@ -113,21 +113,24 @@ document.getElementById("reportForm").addEventListener("submit", function (e) {
             maximumFractionDigits: 2
         })}`;
 
+    // Call our backend endpoint
     fetch(`http://localhost:3000/reports/financial-report?month=${month}`)
         .then(response => response.json())
         .then(data => {
+            // Update summary cards
             document.getElementById("totalRevenue").innerText =
-                formatRM(data.summary.totalRevenue);
+                formatRM(data.summary.TOTAL_REVENUE);
 
             document.getElementById("totalCollected").innerText =
-                formatRM(data.summary.totalCollected);
+                formatRM(data.summary.TOTAL_COLLECTED);
 
             document.getElementById("outstandingFees").innerText =
-                formatRM(data.summary.outstandingFees);
+                formatRM(data.summary.OUTSTANDING_FEES);
 
             document.getElementById("totalEnrollment").innerText =
-                data.summary.totalEnrollment || 0;
+                data.summary.TOTAL_ENROLLMENT || 0;
 
+            // Update payment table
             const table = document.getElementById("paymentTable");
             table.innerHTML = "";
 
@@ -158,6 +161,5 @@ document.getElementById("reportForm").addEventListener("submit", function (e) {
         });
 });
 </script>
-
 </body>
 </html>
