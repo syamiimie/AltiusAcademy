@@ -11,35 +11,48 @@ exports.getAllEnrollments = async (req, res) => {
     conn = await oracledb.getConnection(db);
 
     const result = await conn.execute(`
-      SELECT
-        e.Enroll_ID,
-        e.Student_ID,
-        e.Package_ID,
-        e.Enroll_Date,
-        e.Enroll_Status,
+SELECT
+  e.Enroll_ID,
+  e.Student_ID,
+  e.Package_ID,
+  e.Enroll_Date,
+  e.Enroll_Status,
 
-        s.Student_Name,
+  s.Student_Name,
 
-        p.Package_Name,
+  p.Package_Name,
 
-        sub.Subject_Name,
+  sub.Subject_Name,
 
-        c.Class_ID,
-        c.Class_Name,
-        c.Class_Day,
-        c.Class_Time,
+  c.Class_ID,
+  c.Class_Name,
+  c.Class_Day,
+  c.Class_Time,
 
-        t.Teacher_Name,
+  t.Teacher_Name,
 
-        NVL(pay.Total_Fees, 0) AS Total_Fees_Paid
-      FROM ALTIUS_DB.Enrollment e
-      JOIN ALTIUS_DB.Student s ON e.Student_ID = s.Student_ID
-      JOIN ALTIUS_DB.Package p ON e.Package_ID = p.Package_ID
-      JOIN ALTIUS_DB.Subject sub ON p.Package_ID = sub.Package_ID
-      JOIN ALTIUS_DB.Class c ON sub.Subject_ID = c.Subject_ID
-      LEFT JOIN ALTIUS_DB.Teacher t ON c.Teacher_ID = t.Teacher_ID
-      LEFT JOIN ALTIUS_DB.Payment pay ON e.Payment_ID = pay.Payment_ID
-      ORDER BY e.Enroll_ID DESC
+  NVL(pay.Total_Fees, 0) AS Total_Fees_Paid
+FROM ALTIUS_DB.Enrollment e
+JOIN ALTIUS_DB.Student s 
+  ON e.Student_ID = s.Student_ID
+
+LEFT JOIN ALTIUS_DB.Package p 
+  ON e.Package_ID = p.Package_ID
+
+LEFT JOIN ALTIUS_DB.Subject sub 
+  ON p.Package_ID = sub.Package_ID
+
+LEFT JOIN ALTIUS_DB.Class c 
+  ON sub.Subject_ID = c.Subject_ID
+
+LEFT JOIN ALTIUS_DB.Teacher t 
+  ON c.Teacher_ID = t.Teacher_ID
+
+LEFT JOIN ALTIUS_DB.Payment pay 
+  ON e.Payment_ID = pay.Payment_ID
+
+ORDER BY e.Enroll_ID DESC
+
     `);
 
     res.json(result.rows);

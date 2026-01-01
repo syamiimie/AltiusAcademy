@@ -13,30 +13,42 @@ exports.getEnrollmentsByStudent = async (req, res) => {
 
     const result = await conn.execute(
       `
-      SELECT 
-        e.Enroll_ID,
+      SELECT
+        pkg.Package_ID,
         pkg.Package_Name,
-        pkg.Package_Fee,
-        CASE WHEN e.Payment_ID IS NULL THEN 'Unpaid' ELSE 'Paid' END AS PAYMENTSTATUS
+        NVL(pkg.Package_Fee, 0) AS PACKAGE_FEE,
+        COUNT(e.Enroll_ID) AS ENROLLMENT_COUNT,
+        SUM(CASE WHEN e.Payment_ID IS NULL THEN 1 ELSE 0 END) AS UNPAID_COUNT,
+        SUM(CASE WHEN e.Payment_ID IS NOT NULL THEN 1 ELSE 0 END) AS PAID_COUNT,
+        LISTAGG(e.Enroll_ID, ', ') 
+          WITHIN GROUP (ORDER BY e.Enroll_ID) AS ENROLLMENT_IDS,
+        LISTAGG(
+          CASE WHEN e.Payment_ID IS NOT NULL THEN e.Enroll_ID END,
+          ', '
+        ) WITHIN GROUP (ORDER BY e.Enroll_ID) AS PAID_ENROLLMENT_IDS
       FROM ALTIUS_DB.Enrollment e
       JOIN ALTIUS_DB.Package pkg
         ON e.Package_ID = pkg.Package_ID
       WHERE e.Student_ID = :studentId
-      ORDER BY e.Enroll_ID
+      GROUP BY
+        pkg.Package_ID,
+        pkg.Package_Name,
+        pkg.Package_Fee
+      ORDER BY pkg.Package_Name
       `,
-      [studentId],
-      { outFormat: oracledb.OUT_FORMAT_OBJECT } // important for object keys
+      { studentId },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
 
     res.json(result.rows);
-
   } catch (err) {
-    console.error("ORACLE ERROR:", err);
+    console.error(err);
     res.status(500).send("Error fetching enrollments");
   } finally {
     if (conn) await conn.close();
   }
 };
+
 
 /* ================= ADD PAYMENT FOR SPECIFIC ENROLLMENT ================= */
 exports.addPaymentForEnrollment = async (req, res) => {
@@ -155,7 +167,7 @@ exports.getReceiptByEnrollmentId = async (req, res) => {
         e.Enroll_ID,
         e.Enroll_Date,
         pkg.Package_Name,
-        pkg.Package_Fee,
+        NVL(pkg.Package_Fee, 0) AS PACKAGE_FEE,  
         pay.Payment_ID,
         pay.Payment_Date,
         pay.Total_Fees
