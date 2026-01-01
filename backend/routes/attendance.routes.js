@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/attendance.controller");
+const c = require("../controllers/attendance.controller");
 
-router.get("/", controller.getAllAttendance);
-router.get("/:id", controller.getAttendanceById);
-router.post("/", controller.addAttendance);
-router.put("/:id", controller.updateAttendance);
-router.delete("/:id", controller.deleteAttendance);
+router.get("/", c.getAllAttendance);
+router.get("/:id", c.getAttendanceById);
+router.post("/", c.addAttendance);
+router.put("/:id", c.updateAttendance);
+router.delete("/:id", c.deleteAttendance);
 
 module.exports = router;
