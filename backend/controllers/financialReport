@@ -1,52 +1,75 @@
 const oracledb = require("oracledb");
-const db = require("../db/db");
+const db = require("../db/db"); // your DB config
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
-exports.getFinancialReport = async (req, res) => {
-  const { month } = req.query; // e.g., "2025-12"
-  if (!month) return res.status(400).json({ error: "Month is required" });
-
-  const startDate = `${month}-01`; // first day of the month
-  const endDate = `${month}-31`;   // last day (simplified)
-
+exports.financialReport = async (req, res) => {
+  const { month } = req.query; // expects "YYYY-MM"
   let conn;
+
+  if (!month) {
+    return res.status(400).json({ error: "Month is required" });
+  }
+
   try {
     conn = await oracledb.getConnection(db);
 
-    // 1️⃣ Fetch all payments in that month with student & package info
+    // 1️⃣ Fetch payment details per student
     const paymentsResult = await conn.execute(
-      `SELECT 
+      `
+      SELECT 
           s.STUDENT_NAME,
           p.PACKAGE_NAME,
-          pay.Total_Fees,
-          pay.Amount_Paid,
-          (pay.Total_Fees - pay.Amount_Paid) AS Outstanding
-       FROM PAYMENT pay
-       JOIN ENROLLMENT e ON e.Payment_ID = pay.Payment_ID
-       JOIN STUDENT s ON s.STUDENT_ID = e.Student_ID
-       JOIN PACKAGE p ON p.Package_ID = e.Package_ID
-       WHERE pay.Payment_Date BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') 
-                                   AND TO_DATE(:endDate, 'YYYY-MM-DD')`,
-      { startDate, endDate }
+          p.PACKAGE_FEE AS TOTAL_FEE,
+          NVL(r.total_paid,0) AS AMOUNT_PAID,
+          p.PACKAGE_FEE - NVL(r.total_paid,0) AS OUTSTANDING
+      FROM ENROLLMENT e
+      JOIN STUDENT s ON e.STUDENT_ID = s.STUDENT_ID
+      JOIN PACKAGE p ON e.PACKAGE_ID = p.PACKAGE_ID
+      LEFT JOIN (
+          SELECT PAYMENT_ID, SUM(RECEIPT_AMOUNT) AS total_paid
+          FROM RECEIPT
+          GROUP BY PAYMENT_ID
+      ) r ON e.PAYMENT_ID = r.PAYMENT_ID
+      WHERE TO_CHAR(e.ENROLL_DATE,'YYYY-MM') = :month
+      ORDER BY s.STUDENT_NAME
+      `,
+      { month }
     );
 
-    const payments = paymentsResult.rows;
-
-    // 2️⃣ Calculate summary
-    const totalRevenue = payments.reduce((sum, p) => sum + Number(p.TOTAL_FEES), 0);
-    const totalCollected = payments.reduce((sum, p) => sum + Number(p.AMOUNT_PAID), 0);
-    const outstandingFees = payments.reduce((sum, p) => sum + Number(p.OUTSTANDING), 0);
-    const totalEnrollment = payments.length;
+    // 2️⃣ Compute summary totals
+    const summaryResult = await conn.execute(
+      `
+      SELECT 
+          SUM(p.PACKAGE_FEE) AS TOTAL_REVENUE,
+          SUM(NVL(r.total_paid,0)) AS TOTAL_COLLECTED,
+          SUM(p.PACKAGE_FEE - NVL(r.total_paid,0)) AS OUTSTANDING_FEES,
+          COUNT(*) AS TOTAL_ENROLLMENT
+      FROM ENROLLMENT e
+      JOIN PACKAGE p ON e.PACKAGE_ID = p.PACKAGE_ID
+      LEFT JOIN (
+          SELECT PAYMENT_ID, SUM(RECEIPT_AMOUNT) AS total_paid
+          FROM RECEIPT
+          GROUP BY PAYMENT_ID
+      ) r ON e.PAYMENT_ID = r.PAYMENT_ID
+      WHERE TO_CHAR(e.ENROLL_DATE,'YYYY-MM') = :month
+      `,
+      { month }
+    );
 
     res.json({
-      summary: { totalRevenue, totalCollected, outstandingFees, totalEnrollment },
-      payments
+      summary: summaryResult.rows[0] || {
+        TOTAL_REVENUE: 0,
+        TOTAL_COLLECTED: 0,
+        OUTSTANDING_FEES: 0,
+        TOTAL_ENROLLMENT: 0
+      },
+      payments: paymentsResult.rows
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to generate financial report" });
   } finally {
     if (conn) await conn.close();
   }
