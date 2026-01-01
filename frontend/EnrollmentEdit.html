@@ -39,17 +39,26 @@ const container = document.getElementById("enrollmentCards");
 
 let students = [];
 let packages = [];
+let subjects = [];
 
-/* ===== LOAD MASTER DATA ===== */
+/* ===== LOAD DATA ===== */
 Promise.all([
     fetch("http://localhost:3000/students").then(r => r.json()),
     fetch("http://localhost:3000/packages").then(r => r.json()),
+    fetch("http://localhost:3000/subjects").then(r => r.json()),
     fetch("http://localhost:3000/enrollments").then(r => r.json())
-]).then(([stu, pack, enrollments]) => {
+]).then(([stu, pack, subs, enrollments]) => {
 
     students = stu;
     packages = pack;
+    subjects = subs;
 
+    /* 
+       IMPORTANT:
+       DO NOT GROUP.
+       1 ROW = 1 ENROLLMENT CARD
+       (subject-separated enrollments)
+    */
     const studentEnrollments = enrollments.filter(
         e => e.STUDENT_ID == studentId
     );
@@ -62,28 +71,33 @@ Promise.all([
     studentEnrollments.forEach(e => renderEnrollmentCard(e));
 });
 
-/* ===== RENDER CARD ===== */
+/* ===== RENDER CARD (CLASSIC UI) ===== */
 function renderEnrollmentCard(e) {
 
-    const studentName =
-        students.find(s => s.STUDENT_ID == e.STUDENT_ID)?.STUDENT_NAME || "-";
-
-    let studentOptions = students.map(s =>
+    const studentOptions = students.map(s =>
         `<option value="${s.STUDENT_ID}" ${s.STUDENT_ID == e.STUDENT_ID ? "selected" : ""}>
             ${s.STUDENT_NAME}
         </option>`
     ).join("");
 
-    let packageOptions = packages.map(p =>
-        `<option value="${p.PACKAGE_ID}" ${p.PACKAGE_NAME == e.PACKAGE_NAME ? "selected" : ""}>
+    const packageOptions = packages.map(p =>
+        `<option value="${p.PACKAGE_ID}" ${p.PACKAGE_ID == e.PACKAGE_ID ? "selected" : ""}>
             ${p.PACKAGE_NAME}
         </option>`
     ).join("");
 
+    const subjectOptions = subjects
+        .filter(s => s.PACKAGE_ID == e.PACKAGE_ID)
+        .map(s =>
+            `<option value="${s.SUBJECT_ID}" ${s.SUBJECT_ID == e.SUBJECT_ID ? "selected" : ""}>
+                ${s.SUBJECT_NAME}
+            </option>`
+        ).join("");
+
     container.innerHTML += `
         <form class="form" onsubmit="updateEnrollment(event, ${e.ENROLL_ID})">
 
-            <h3>${studentName} — Enrollment #${e.ENROLL_ID}</h3>
+            <h3 class="titles">Enrollment #${e.ENROLL_ID}</h3>
 
             <label>Student</label>
             <select class="select-class" disabled>
@@ -91,8 +105,13 @@ function renderEnrollmentCard(e) {
             </select>
 
             <label>Package</label>
-            <select class="select-class" data-package>
+            <select class="select-class" data-package onchange="onPackageChange(this)">
                 ${packageOptions}
+            </select>
+
+            <label>Subject</label>
+            <select class="select-class" data-subject disabled>
+                ${subjectOptions}
             </select>
 
             <label>Status</label>
@@ -111,6 +130,22 @@ function renderEnrollmentCard(e) {
     `;
 }
 
+/* ===== SUBJECT ENABLE ONLY WHEN PACKAGE CHANGES ===== */
+function onPackageChange(packageSelect) {
+    const form = packageSelect.closest("form");
+    const subjectSelect = form.querySelector("[data-subject]");
+
+    subjectSelect.disabled = false;
+    subjectSelect.innerHTML = "";
+
+    subjects
+        .filter(s => s.PACKAGE_ID == packageSelect.value)
+        .forEach(s => {
+            subjectSelect.innerHTML +=
+                `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
+        });
+}
+
 /* ===== UPDATE ===== */
 function updateEnrollment(event, enrollId) {
     event.preventDefault();
@@ -124,7 +159,6 @@ function updateEnrollment(event, enrollId) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             Package_ID: packageId,
-            Enroll_Date: null,
             Enroll_Status: status
         })
     })

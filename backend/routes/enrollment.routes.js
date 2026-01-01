@@ -2,11 +2,10 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/enrollment.controller");
 
-/* ===== LIST ===== */
+/* ===== GET ===== */
 router.get("/", controller.getAllEnrollments);  // GET /enrollments (when mounted at /enrollments)
-
-/* ===== SINGLE ===== */
 router.get("/:id", controller.getEnrollmentById);  // GET /enrollments/:id
+router.get("/enrollments/student/:id", controller.getEnrollmentsByStudentId);
 
 /* ===== CRUD ===== */
 router.post("/", controller.addEnrollment);        // POST /enrollments

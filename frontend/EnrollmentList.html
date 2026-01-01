@@ -47,24 +47,24 @@ fetch("http://localhost:3000/enrollments")
     const grouped = {};
 
     data.forEach(e => {
-        const id = e.STUDENT_ID || e.student_id || e.STUDENT_NAME;
+        // Group by student
+        const studentId = e.STUDENT_ID;
 
-        if (!grouped[id]) {
-            grouped[id] = {
-                enrollId: e.ENROLL_ID,   
+        if (!grouped[studentId]) {
+            grouped[studentId] = {
+                studentId: e.STUDENT_ID,
                 studentName: e.STUDENT_NAME,
-                status: e.ENROLL_STATUS,
+                statusSet: new Set(),
                 packages: new Set(),
                 classes: []
             };
         }
 
-        // DISTINCT package
-        if (e.PACKAGE_NAME) {
-            grouped[id].packages.add(e.PACKAGE_NAME);
-        }
+        // Collect all statuses, packages, and classes
+        grouped[studentId].statusSet.add(e.ENROLL_STATUS);
+        if (e.PACKAGE_NAME) grouped[studentId].packages.add(e.PACKAGE_NAME);
 
-        grouped[id].classes.push({
+        grouped[studentId].classes.push({
             classId: e.CLASS_ID || "-",
             className: e.CLASS_NAME,
             time: e.CLASS_TIME,
@@ -74,8 +74,10 @@ fetch("http://localhost:3000/enrollments")
         });
     });
 
+    // Render each student card
     Object.values(grouped).forEach(student => {
         const packageText = [...student.packages].join(", ") || "N/A";
+        const statusText = [...student.statusSet].join(", ");
 
         let rows = "";
         student.classes.forEach(c => {
@@ -95,7 +97,7 @@ fetch("http://localhost:3000/enrollments")
             <div class="card">
                 <div class="card-header">
                     <h3>${student.studentName}</h3>
-                    <span class="badge active">${student.status}</span>
+                    <span class="badge active">${statusText}</span>
                 </div>
 
                 <p><b>Package:</b> ${packageText}</p>
@@ -123,33 +125,32 @@ fetch("http://localhost:3000/enrollments")
                 </div>
 
                 <div class="card-actions">
-                    <button class="button" onclick="editEnrollment(${student.enrollId})">
+                    <button class="button" onclick="editEnrollment(${student.studentId})">
                         Edit
                     </button>
 
-                    <button class="button" onclick="deleteEnrollment(${student.enrollId})">
+                    <button class="button" onclick="deleteEnrollment(${student.studentId})">
                         Delete
                     </button>
                 </div>
-
             </div>
         `;
     });
 });
 
-function editEnrollment(id) {
-    window.location.href = `EnrollmentEdit.html?id=${id}`;
+function editEnrollment(studentId) {
+    window.location.href = `EnrollmentEdit.html?studentId=${studentId}`;
 }
 
-function deleteEnrollment(id) {
-    if (!confirm("Are you sure you want to delete this enrollment?")) return;
+function deleteEnrollment(studentId) {
+    if (!confirm("Are you sure you want to delete ALL enrollments of this student?")) return;
 
-    fetch(`http://localhost:3000/enrollments/${id}`, {
+    fetch(`http://localhost:3000/enrollments/student/${studentId}`, {
         method: "DELETE"
     })
     .then(res => {
         if (!res.ok) throw new Error("Delete failed");
-        alert("Enrollment deleted successfully");
+        alert("Enrollments deleted successfully");
         location.reload();
     })
     .catch(err => alert(err.message));
