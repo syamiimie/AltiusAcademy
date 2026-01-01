@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const financialController = require("../controllers/financialReport");
+const controller = require("../controllers/financialReport");
 
-router.get("/financial-report", financialController.getFinancialReport);
+/*
+  GET /report?month=2025-01
+*/
+router.get("/", controller.financialReport);
 
 module.exports = router;

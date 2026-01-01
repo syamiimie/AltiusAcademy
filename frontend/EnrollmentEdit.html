@@ -1,174 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Altius Academy | Edit Enrollment</title>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
-</head>
+const express = require("express");
+const router = express.Router();
+const controller = require("../controllers/enrollment.controller");
 
-<body>
-
-<header class="top-bar">
-    <div class="logo">
-        <a href="StaffHomepage.html">
-            <img src="images/logo1.png">
-        </a>
-    </div>
-
-    <nav class="nav-menu">
-        <a href="TeacherList.html">Teacher</a>
-        <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
-        <a href="EnrollmentList.html" class="active">Enrollment</a>
-        <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html">Subject</a>
-        <a href="report.html">Report</a>
-    </nav>
-</header>
-
-<main class="content">
-    <h2 class="titles">Edit Student Enrollments</h2>
-    <div id="enrollmentCards"></div>
-</main>
-
-<script>
-const params = new URLSearchParams(window.location.search);
-const studentId = params.get("studentId");
-
-const container = document.getElementById("enrollmentCards");
-
-let students = [];
-let packages = [];
-let subjects = [];
-
-/* ===== LOAD DATA ===== */
-Promise.all([
-    fetch("http://localhost:3000/students").then(r => r.json()),
-    fetch("http://localhost:3000/packages").then(r => r.json()),
-    fetch("http://localhost:3000/subjects").then(r => r.json()),
-    fetch("http://localhost:3000/enrollments").then(r => r.json())
-]).then(([stu, pack, subs, enrollments]) => {
-
-    students = stu;
-    packages = pack;
-    subjects = subs;
-
-    /* 
-       IMPORTANT:
-       DO NOT GROUP.
-       1 ROW = 1 ENROLLMENT CARD
-       (subject-separated enrollments)
-    */
-    const studentEnrollments = enrollments.filter(
-        e => e.STUDENT_ID == studentId
-    );
-
-    if (studentEnrollments.length === 0) {
-        container.innerHTML = "<p>No enrollments found.</p>";
-        return;
-    }
-
-    studentEnrollments.forEach(e => renderEnrollmentCard(e));
+/* ===== LIST ===== */
+/*
+  GET /enrollments
+  GET /enrollments?studentId=1
+*/
+router.get("/", (req, res) => {
+  if (req.query.studentId) {
+    return controller.getEnrollmentsByStudent(req, res);
+  }
+  return controller.getAllEnrollments(req, res);
 });
 
-/* ===== RENDER CARD (CLASSIC UI) ===== */
-function renderEnrollmentCard(e) {
+/* ===== BY STUDENT (PATH PARAM) ===== */
+/*
+  GET /enrollments/student/1
+*/
+router.get("/student/:id", controller.getEnrollmentsByStudentId);
 
-    const studentOptions = students.map(s =>
-        `<option value="${s.STUDENT_ID}" ${s.STUDENT_ID == e.STUDENT_ID ? "selected" : ""}>
-            ${s.STUDENT_NAME}
-        </option>`
-    ).join("");
+/* ===== SINGLE ===== */
+/*
+  GET /enrollments/10
+*/
+router.get("/:id", controller.getEnrollmentById);
 
-    const packageOptions = packages.map(p =>
-        `<option value="${p.PACKAGE_ID}" ${p.PACKAGE_ID == e.PACKAGE_ID ? "selected" : ""}>
-            ${p.PACKAGE_NAME}
-        </option>`
-    ).join("");
+/* ===== CRUD ===== */
+router.post("/", controller.addEnrollment);          // POST /enrollments
+router.put("/:id", controller.updateEnrollment);     // PUT /enrollments/:id
+router.delete("/:id", controller.deleteEnrollment);  // DELETE /enrollments/:id
 
-    const subjectOptions = subjects
-        .filter(s => s.PACKAGE_ID == e.PACKAGE_ID)
-        .map(s =>
-            `<option value="${s.SUBJECT_ID}" ${s.SUBJECT_ID == e.SUBJECT_ID ? "selected" : ""}>
-                ${s.SUBJECT_NAME}
-            </option>`
-        ).join("");
-
-    container.innerHTML += `
-        <form class="form" onsubmit="updateEnrollment(event, ${e.ENROLL_ID})">
-
-            <h3 class="titles">Enrollment #${e.ENROLL_ID}</h3>
-
-            <label>Student</label>
-            <select class="select-class" disabled>
-                ${studentOptions}
-            </select>
-
-            <label>Package</label>
-            <select class="select-class" data-package onchange="onPackageChange(this)">
-                ${packageOptions}
-            </select>
-
-            <label>Subject</label>
-            <select class="select-class" data-subject disabled>
-                ${subjectOptions}
-            </select>
-
-            <label>Status</label>
-            <select class="select-class" data-status>
-                <option value="Active" ${e.ENROLL_STATUS === "Active" ? "selected" : ""}>Active</option>
-                <option value="Inactive" ${e.ENROLL_STATUS === "Inactive" ? "selected" : ""}>Inactive</option>
-                <option value="Completed" ${e.ENROLL_STATUS === "Completed" ? "selected" : ""}>Completed</option>
-            </select>
-
-            <div class="card-actions">
-                <button class="button" type="submit">Update</button>
-                <a href="EnrollmentList.html" class="button">Back</a>
-            </div>
-
-        </form>
-    `;
-}
-
-/* ===== SUBJECT ENABLE ONLY WHEN PACKAGE CHANGES ===== */
-function onPackageChange(packageSelect) {
-    const form = packageSelect.closest("form");
-    const subjectSelect = form.querySelector("[data-subject]");
-
-    subjectSelect.disabled = false;
-    subjectSelect.innerHTML = "";
-
-    subjects
-        .filter(s => s.PACKAGE_ID == packageSelect.value)
-        .forEach(s => {
-            subjectSelect.innerHTML +=
-                `<option value="${s.SUBJECT_ID}">${s.SUBJECT_NAME}</option>`;
-        });
-}
-
-/* ===== UPDATE ===== */
-function updateEnrollment(event, enrollId) {
-    event.preventDefault();
-
-    const form = event.target;
-    const packageId = form.querySelector("[data-package]").value;
-    const status = form.querySelector("[data-status]").value;
-
-    fetch(`http://localhost:3000/enrollments/${enrollId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            Package_ID: packageId,
-            Enroll_Status: status
-        })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Update failed");
-        alert("Enrollment updated successfully");
-    })
-    .catch(err => alert(err.message));
-}
-</script>
-
-</body>
-</html>
+module.exports = router;
