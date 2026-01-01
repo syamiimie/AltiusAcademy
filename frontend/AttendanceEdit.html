@@ -5,32 +5,30 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- HEADER -->
+
+<!-- HEADER -->
 <header class="top-bar">
-    <div class="logo">
-        <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
-        </a>
-    </div>
+  <div class="logo">
+    <a href="StaffHomepage.html">
+      <img src="images/logo1.png" alt="Altius Academy">
+    </a>
+  </div>
 
-    <nav class="nav-menu">
-        <a href="TeacherList.html">Teacher</a>
-        <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
-        <a href="EnrollmentList.html" class="active">Enrollment</a>
-        <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html">Subject</a>
-        <a href="AttendanceList.html">Attendance</a>
-        <a href="report.html">Report</a>
-    </nav>
+  <nav class="nav-menu">
+    <a href="TeacherList.html">Teacher</a>
+    <a href="StudentList.html">Student</a>
+    <a href="ClassList.html">Class</a>
+    <a href="EnrollmentList.html">Enrollment</a>
+    <a href="PackageList.html">Package</a>
+    <a href="SubjectList.html">Subject</a>
+    <a href="AttendanceList.html">Attendance</a>
+    <a href="report.html">Report</a>
+  </nav>
 
-        <!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
-        <button class="button" onclick="logout()">Logout</button>
-        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
-    </div>
-
+  <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+    <button class="button" onclick="logout()">Logout</button>
+    <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+  </div>
 </header>
 
 <main class="content">
@@ -53,8 +51,23 @@
   </td>
 </tr>
 
-<tr><td>Student ID</td><td><input id="student_id" required></td></tr>
-<tr><td>Class ID</td><td><input id="class_id" required></td></tr>
+<tr>
+  <td>Class</td>
+  <td>
+    <select id="class_id" required>
+      <option value="">-- Select Class --</option>
+    </select>
+  </td>
+</tr>
+
+<tr>
+  <td>Student</td>
+  <td>
+    <select id="student_id" required>
+      <option value="">-- Select Student --</option>
+    </select>
+  </td>
+</tr>
 
 <tr>
   <td colspan="2" align="center">
@@ -67,16 +80,66 @@
 
 <script>
 const id = new URLSearchParams(location.search).get("id");
+let selectedClass = null;
+let selectedStudent = null;
 
+// 1️⃣ LOAD ATTENDANCE DATA
 fetch(`http://localhost:3000/attendance/${id}`)
 .then(r => r.json())
 .then(a => {
   attend_date.value = a.ATTEND_DATE;
   attend_status.value = a.ATTEND_STATUS;
-  student_id.value = a.STUDENT_ID;
-  class_id.value = a.CLASS_ID;
+  selectedClass = a.CLASS_ID;
+  selectedStudent = a.STUDENT_ID;
+
+  loadClasses();
 });
 
+// 2️⃣ LOAD CLASSES
+function loadClasses(){
+  fetch("http://localhost:3000/classes")
+  .then(r => r.json())
+  .then(classes => {
+    class_id.innerHTML = `<option value="">-- Select Class --</option>`;
+    classes.forEach(c => {
+      class_id.innerHTML += `
+        <option value="${c.CLASS_ID}">
+          ${c.CLASS_ID} - ${c.CLASS_NAME}
+        </option>
+      `;
+    });
+
+    class_id.value = selectedClass;
+    loadStudentsByClass(selectedClass);
+  });
+}
+
+// 3️⃣ LOAD STUDENTS BY CLASS
+function loadStudentsByClass(classId){
+  if(!classId) return;
+
+  fetch(`http://localhost:3000/attendance/class/${classId}/students`)
+  .then(r => r.json())
+  .then(students => {
+    student_id.innerHTML = `<option value="">-- Select Student --</option>`;
+    students.forEach(s => {
+      student_id.innerHTML += `
+        <option value="${s.STUDENT_ID}">
+          ${s.STUDENT_ID} - ${s.STUDENT_NAME}
+        </option>
+      `;
+    });
+
+    student_id.value = selectedStudent;
+  });
+}
+
+// onchange class → reload students
+class_id.onchange = () => {
+  loadStudentsByClass(class_id.value);
+};
+
+// 4️⃣ SUBMIT UPDATE
 form.onsubmit = e => {
   e.preventDefault();
 
@@ -94,6 +157,16 @@ form.onsubmit = e => {
     location.href = "AttendanceList.html";
   });
 };
+
+function goStaffHome(){
+  const staff = localStorage.getItem("staff");
+  if(!staff){
+    alert("Please login first");
+    location.href = "login.html";
+    return;
+  }
+  location.href = "StaffHomepage.html";
+}
 </script>
 
 </body>

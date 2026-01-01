@@ -67,8 +67,8 @@ fetch("http://localhost:3000/attendance")
         <td>${a.ATTEND_ID}</td>
         <td>${a.ATTEND_DATE}</td>
         <td>${a.ATTEND_STATUS}</td>
-        <td>${a.STUDENT_ID}</td>
-        <td>${a.CLASS_ID}</td>
+        <td>${a.STUDENT_ID} - ${a.STUDENT_NAME}</td>
+        <td>${a.CLASS_ID} - ${a.CLASS_NAME}</td>
         <td>
           <a class="button" href="AttendanceEdit.html?id=${a.ATTEND_ID}">Edit</a>
           <button class="button" onclick="del(${a.ATTEND_ID})">Delete</button>
@@ -77,6 +77,13 @@ fetch("http://localhost:3000/attendance")
     `;
   });
 });
+
+function del(id){
+  if(confirm("Delete attendance?")){
+    fetch(`http://localhost:3000/attendance/${id}`,{ method:"DELETE" })
+    .then(()=>location.reload());
+  }
+}
 
 function del(id){
   if(confirm("Delete attendance?")){
