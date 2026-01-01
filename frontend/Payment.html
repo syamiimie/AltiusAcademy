@@ -10,9 +10,7 @@
 <body>
 <header class="top-bar">
     <div class="logo">
-        <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
-        </a>
+        <a href="StaffHomepage.html"><img src="images/logo1.png" alt="Altius Academy"></a>
     </div>
 
     <nav class="nav-menu">
@@ -23,102 +21,161 @@
         <a href="SubjectList.html">Subject</a>
         <a href="report.html">Report</a>
     </nav>
-    <!-- USER ICON + LOGOUT -->
+
     <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
         <button class="button" onclick="logout()">Logout</button>
         <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
     </div>
 </header>
 
-<!-- MAIN CONTENT -->
 <main class="content">
-
-    <!-- PAGE TITLE -->
     <h1 class="page-title">Student Payment Details</h1>
 
-    <!-- STUDENT SUMMARY CARD -->
+    <!-- STUDENT SUMMARY -->
     <section class="summary-card">
         <div class="summary-item">
             <span class="label">Student Name</span>
             <span id="studentName" class="value">XXXX</span>
         </div>
-
         <div class="summary-item">
             <span class="label">Student ID</span>
             <span id="studentId" class="value">XXXX</span>
         </div>
-
         <div class="summary-item highlight">
             <span class="label">Total Paid (RM)</span>
             <span id="totalFee" class="value">0.00</span>
         </div>
     </section>
 
-    <!-- PAYMENT TABLE -->
+    <!-- ENROLLMENTS TABLE -->
     <section class="table-section">
-        <h2>Payment History</h2>
-
+        <h2>Enrollments & Payments</h2>
         <table class="payment-table">
             <thead>
                 <tr>
-                    <th>Payment ID</th>
-                    <th>Payment Name</th>
-                    <th>Payment Date</th>
-                    <th>Amount (RM)</th>
-                    <th>Receipt</th>
+                    <th>Enrollment ID</th>
+                    <th>Package</th>
+                    <th>Fee (RM)</th>
+                    <th>Payment Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="PaymentTable">
+            <tbody id="EnrollmentTable">
                 <!-- Dynamic rows -->
             </tbody>
         </table>
-
-        <!-- EMPTY STATE -->
-        <p id="emptyMessage" class="empty-message" hidden>
-            No payment records found for this student.
-        </p>
+        <p id="emptyMessage" class="empty-message" hidden>No enrollments found for this student.</p>
     </section>
 
+    <!-- ADD PAYMENT MODAL -->
+    <div id="paymentModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Add Payment</h3>
+
+            <label>Payment Date</label>
+            <input type="date" id="paymentDate" required>
+
+            <label>Amount (RM)</label>
+            <input type="number" id="paymentAmount" step="0.01" required>
+
+            <div class="modal-actions">
+                <button onclick="submitPayment()">Save</button>
+                <button onclick="closePaymentModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script>
-    const studentId = new URLSearchParams(window.location.search).get("studentId");
+const studentId = new URLSearchParams(window.location.search).get("studentId");
+let currentEnrollmentId = null;
 
+/* Fetch student info & enrollments */
+function loadStudentData() {
+    // Fetch student name and total paid
     fetch(`http://localhost:3000/payment?studentId=${studentId}`)
         .then(res => res.json())
         .then(data => {
             document.getElementById("studentName").textContent = data.studentName;
             document.getElementById("studentId").textContent = studentId;
-            document.getElementById("totalFee").textContent = data.totalPaid.toFixed(2);
+            document.getElementById("totalFee").textContent = parseFloat(data.totalPaid).toFixed(2);
+        });
 
-            const table = document.getElementById("PaymentTable");
+    // Fetch all enrollments
+    fetch(`http://localhost:3000/enrollments?studentId=${studentId}`)
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById("EnrollmentTable");
             const emptyMessage = document.getElementById("emptyMessage");
+            tbody.innerHTML = "";
 
-            table.innerHTML = "";
-
-            if (data.payments.length === 0) {
+            if (data.length === 0) {
                 emptyMessage.hidden = false;
                 return;
             }
+            emptyMessage.hidden = true;
 
-            data.payments.forEach(p => {
-                table.innerHTML += `
+            data.forEach(e => {
+                tbody.innerHTML += `
                     <tr>
-                        <td>${p.PAYMENT_ID}</td>
-                        <td>${p.PAYMENT_NAME}</td>
-                        <td>${p.PAYMENT_DATE}</td>
-                        <td>${p.TOTAL_FEES.toFixed(2)}</td>
+                        <td>${e.ENROLL_ID}</td>
+                        <td>${e.PACKAGE_NAME}</td>
+                        <td>${parseFloat(e.PACKAGE_FEE).toFixed(2)}</td>
+                        <td>${e.PAYMENTSTATUS}</td>
                         <td>
-                            <a href="Receipt.html?id=${p.PAYMENT_ID}" class="btn-receipt">
-                                View Receipt
-                            </a>
+                            ${e.PAYMENTSTATUS === 'Unpaid'
+                                ? `<button onclick="openPaymentModal(${e.ENROLL_ID})">Add Payment</button>`
+                                : `<a href="Receipt.html?id=${e.ENROLL_ID}">View Receipt</a>`}
                         </td>
                     </tr>
                 `;
             });
         });
-</script>
+}
 
+/* Open & close modal */
+function openPaymentModal(enrollmentId) {
+    currentEnrollmentId = enrollmentId;
+    document.getElementById("paymentModal").classList.remove("hidden");
+}
+
+function closePaymentModal() {
+    currentEnrollmentId = null;
+    document.getElementById("paymentModal").classList.add("hidden");
+}
+
+/* Submit payment for specific enrollment */
+function submitPayment() {
+    const paymentDate = document.getElementById("paymentDate").value;
+    const totalFees = document.getElementById("paymentAmount").value;
+
+    if (!paymentDate || !totalFees) {
+        alert("Please complete all fields");
+        return;
+    }
+
+    fetch("http://localhost:3000/payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            enrollmentId: currentEnrollmentId,
+            paymentDate,
+            totalFees
+        })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Failed to add payment");
+        return res.text();
+    })
+    .then(() => {
+        closePaymentModal();
+        loadStudentData(); // refresh table & summary
+    })
+    .catch(err => alert(err.message));
+}
+
+/* Initial load */
+loadStudentData();
+</script>
 </body>
 </html>
