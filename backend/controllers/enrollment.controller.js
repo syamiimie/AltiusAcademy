@@ -73,6 +73,78 @@ exports.addEnrollment = async (req, res) => {
   try {
     conn = await oracledb.getConnection(db);
 
+    /* 1️⃣ Check student & package exist */
+    const checkBase = await conn.execute(
+      `
+      SELECT
+        (SELECT COUNT(*) FROM ALTIUS_DB.Student WHERE Student_ID = :Student_ID) AS STUDENT_CNT,
+        (SELECT COUNT(*) FROM ALTIUS_DB.Package WHERE Package_ID = :Package_ID) AS PACKAGE_CNT
+      FROM DUAL
+      `,
+      { Student_ID, Package_ID }
+    );
+
+    const { STUDENT_CNT, PACKAGE_CNT } = checkBase.rows[0];
+
+    if (STUDENT_CNT === 0 || PACKAGE_CNT === 0) {
+      return res.status(400).send("Invalid student or package selected");
+    }
+
+    /* 2️⃣ Prevent duplicate enrollment */
+    const dupCheck = await conn.execute(
+      `
+      SELECT COUNT(*) AS CNT
+      FROM ALTIUS_DB.Enrollment
+      WHERE Student_ID = :Student_ID
+        AND Package_ID = :Package_ID
+      `,
+      { Student_ID, Package_ID }
+    );
+
+    if (dupCheck.rows[0].CNT > 0) {
+      return res.status(409).send(
+        "Student is already enrolled in this package"
+      );
+    }
+
+    /* 3️⃣ Check if package is Advanced */
+    const advCheck = await conn.execute(
+      `
+      SELECT COUNT(*) AS CNT
+      FROM ALTIUS_DB.Package
+      WHERE Package_ID = :Package_ID
+        AND Package_Name LIKE 'Advanced%'
+      `,
+      { Package_ID }
+    );
+
+    const isAdvanced = advCheck.rows[0].CNT > 0;
+
+/* 4️⃣ If Advanced → must have Biology F4 & Biology F5 */
+if (isAdvanced) {
+  const f45Check = await conn.execute(
+    `
+    SELECT COUNT(DISTINCT s.SUBJECT_NAME) AS CNT
+    FROM ALTIUS_DB.Enrollment e
+    JOIN ALTIUS_DB.Subject s
+      ON e.Package_ID = s.Package_ID
+    WHERE e.Student_ID = :Student_ID
+       AND (
+      s.SUBJECT_NAME LIKE '% F4'
+      OR s.SUBJECT_NAME LIKE '% F5'
+    )   
+    `,
+    { Student_ID }
+  );
+
+  if (f45Check.rows[0].CNT < 2) {
+    return res.status(403).send(
+      "Student must be enrolled in BOTH F4 and F5 Subjects before enrolling in Advanced package"
+    );
+  }
+}
+
+    /* 5️⃣ Insert enrollment */
     await conn.execute(
       `
       INSERT INTO ALTIUS_DB.Enrollment
@@ -80,7 +152,7 @@ exports.addEnrollment = async (req, res) => {
       VALUES
         (ALTIUS_DB.Enroll_SEQ.NEXTVAL, :Student_ID, :Package_ID, :Enroll_Status)
       `,
-      [Student_ID, Package_ID, Enroll_Status],
+      { Student_ID, Package_ID, Enroll_Status },
       { autoCommit: true }
     );
 

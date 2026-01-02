@@ -112,13 +112,19 @@ document.getElementById("enrollForm").addEventListener("submit", e => {
             Enroll_Status: statusSelect.value
         })
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Failed to add enrollment");
+    .then(async res => {
+        if (!res.ok) {
+            const msg = await res.text();
+            throw new Error(msg);
+        }
         alert("Enrollment added successfully");
         location.href = "EnrollmentList.html";
     })
-    .catch(err => alert(err.message));
+    .catch(err => {
+        alert(err.message);
+    });
 });
+
 </script>
 
 </body>
