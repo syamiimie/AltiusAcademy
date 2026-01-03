@@ -4,20 +4,30 @@ const db = require("../db/db");
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
 // ================= GET ALL =================
+// ================= GET ALL =================
 exports.getAllAttendance = async (req, res) => {
   let conn;
   try {
     conn = await oracledb.getConnection(db);
+
     const r = await conn.execute(`
-      SELECT 
-        attend_id,
-        TO_CHAR(attend_date,'YYYY-MM-DD') AS attend_date,
-        attend_status,
-        student_id,
-        class_id
-      FROM attendance
-      ORDER BY attend_id
+      SELECT
+        a.attend_id,
+        TO_CHAR(a.attend_date,'YYYY-MM-DD') AS attend_date,
+        a.attend_status,
+
+        s.student_id,
+        s.student_name,
+
+        c.class_id,
+        c.class_name
+
+      FROM attendance a
+      JOIN student s ON a.student_id = s.student_id
+      JOIN class c ON a.class_id = c.class_id
+      ORDER BY a.attend_id
     `);
+
     res.json(r.rows);
   } catch (e) {
     console.error(e);
@@ -143,3 +153,31 @@ exports.deleteAttendance = async (req, res) => {
     if (conn) await conn.close();
   }
 };
+
+// ================= GET STUDENTS BY CLASS =================
+exports.getStudentsByClass = async (req, res) => {
+  const { class_id } = req.params;
+  let conn;
+  try {
+    conn = await oracledb.getConnection(db);
+
+    const r = await conn.execute(`
+      SELECT DISTINCT
+        s.student_id,
+        s.student_name
+      FROM enrollment e
+      JOIN student s ON e.student_id = s.student_id
+      JOIN class c ON c.subject_id = e.package_id
+      WHERE c.class_id = :class_id
+      ORDER BY s.student_name
+    `, { class_id });
+
+    res.json(r.rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json(e);
+  } finally {
+    if (conn) await conn.close();
+  }
+};
+

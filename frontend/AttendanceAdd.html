@@ -6,37 +6,30 @@
 </head>
 
 <body>
-  <!-- HEADER -->
+
 <header class="top-bar">
-    <div class="logo">
-        <a href="StaffHomepage.html">
-            <img src="images/logo1.png" alt="Altius Academy">
-        </a>
-    </div>
+  <div class="logo">
+    <a href="StaffHomepage.html">
+      <img src="images/logo1.png" alt="Altius Academy">
+    </a>
+  </div>
 
-    <nav class="nav-menu">
-        <a href="TeacherList.html">Teacher</a>
-        <a href="StudentList.html">Student</a>
-        <a href="ClassList.html">Class</a>
-        <a href="EnrollmentList.html" class="active">Enrollment</a>
-        <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html">Subject</a>
-        <a href="AttendanceList.html">Attendance</a>
-        <a href="report.html">Report</a>
-    </nav>
-
-        <!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
-        <button class="button" onclick="logout()">Logout</button>
-        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
-    </div>
-
+  <nav class="nav-menu">
+    <a href="TeacherList.html">Teacher</a>
+    <a href="StudentList.html">Student</a>
+    <a href="ClassList.html">Class</a>
+    <a href="EnrollmentList.html">Enrollment</a>
+    <a href="PackageList.html">Package</a>
+    <a href="SubjectList.html">Subject</a>
+    <a href="AttendanceList.html" class="active">Attendance</a>
+    <a href="report.html">Report</a>
+  </nav>
 </header>
 
 <main class="content">
 <form id="form">
 <table class="form">
+
 <tr><td colspan="2" class="titles">Add Attendance</td></tr>
 
 <tr>
@@ -47,26 +40,81 @@
 <tr>
   <td>Status</td>
   <td>
-    <select id="attend_status" required>
+    <select id="attend_status">
       <option value="Present">Present</option>
       <option value="Absent">Absent</option>
     </select>
   </td>
 </tr>
 
-<tr><td>Student ID</td><td><input id="student_id" required></td></tr>
-<tr><td>Class ID</td><td><input id="class_id" required></td></tr>
+<tr>
+  <td>Class</td>
+  <td>
+    <select id="class_id" required>
+      <option value="">-- Select Class --</option>
+    </select>
+  </td>
+</tr>
+
+<tr>
+  <td>Student</td>
+  <td>
+    <select id="student_id" required disabled>
+      <option value="">-- Select Student --</option>
+    </select>
+  </td>
+</tr>
 
 <tr>
   <td colspan="2" align="center">
     <button class="button">Save</button>
   </td>
 </tr>
+
 </table>
 </form>
 </main>
 
 <script>
+const classSelect = document.getElementById("class_id");
+const studentSelect = document.getElementById("student_id");
+
+// LOAD CLASSES
+fetch("http://localhost:3000/classes")
+  .then(r => r.json())
+  .then(data => {
+    data.forEach(c => {
+      classSelect.innerHTML += `
+        <option value="${c.CLASS_ID}">
+          ${c.CLASS_ID} - ${c.CLASS_NAME}
+        </option>
+      `;
+    });
+  });
+
+// WHEN CLASS CHANGED → LOAD STUDENTS
+classSelect.onchange = () => {
+  const classId = classSelect.value;
+  studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
+  studentSelect.disabled = true;
+
+  if (!classId) return;
+
+  fetch(`http://localhost:3000/attendance/class/${classId}/students`)
+    .then(r => r.json())
+    .then(data => {
+      data.forEach(s => {
+        studentSelect.innerHTML += `
+          <option value="${s.STUDENT_ID}">
+            ${s.STUDENT_NAME}
+          </option>
+        `;
+      });
+      studentSelect.disabled = false;
+    });
+};
+
+// SUBMIT
 form.onsubmit = e => {
   e.preventDefault();
 
@@ -76,8 +124,8 @@ form.onsubmit = e => {
     body: JSON.stringify({
       attend_date: attend_date.value,
       attend_status: attend_status.value,
-      student_id: student_id.value,
-      class_id: class_id.value
+      student_id: studentSelect.value,
+      class_id: classSelect.value
     })
   }).then(() => {
     alert("Attendance added");

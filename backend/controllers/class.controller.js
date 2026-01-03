@@ -58,54 +58,63 @@ exports.addClass = async (req, res) => {
   try {
     conn = await oracledb.getConnection(db);
 
-    // Insert class and get generated CLASS_ID
-    const r = await conn.execute(
-      `INSERT INTO CLASS (
-         CLASS_ID, CLASS_NAME, CLASS_TIME, CLASS_DAY, SUBJECT_ID, TEACHER_ID
-       )
-       VALUES (
-         ALTIUS_DB.CLASS_SEQ.NEXTVAL, :name, :time, :day, :subject_id, :teacher_id
-       )
-       RETURNING CLASS_ID INTO :class_id`,
-      {
-        name,
-        time,
-        day,
-        subject_id,
-        teacher_id,
-        class_id: { dir: oracledb.BIND_OUT, type: oracledb.STRING }
-      },
-      { autoCommit: false }
+    /* 1️⃣ Insert class (NO CLASS_ID) */
+    await conn.execute(
+      `
+      INSERT INTO ALTIUS_DB.CLASS (
+        CLASS_NAME, CLASS_TIME, CLASS_DAY, SUBJECT_ID, TEACHER_ID
+      )
+      VALUES (
+        :name, :time, :day, :subject_id, :teacher_id
+      )
+      `,
+      { name, time, day, subject_id, teacher_id }
     );
 
-    const classId = r.outBinds.class_id[0];
+    /* 2️⃣ Get generated CLASS_ID */
+    const idResult = await conn.execute(
+      `
+      SELECT CLASS_ID
+      FROM ALTIUS_DB.CLASS
+      WHERE ROWID = (
+        SELECT MAX(ROWID)
+        FROM ALTIUS_DB.CLASS
+      )
+      `
+    );
 
-    // Insert prerequisites
+    const classId = idResult.rows[0].CLASS_ID;
+
+    /* 3️⃣ Insert prerequisites */
     for (let prereqId of prerequisites) {
-      prereqId = prereqId.trim();
-      if (prereqId === classId) throw new Error("Class cannot be its own prerequisite");
-
-      const check = await conn.execute(
-        `SELECT COUNT(*) AS CNT FROM CLASS WHERE CLASS_ID = :id`,
-        { id: prereqId }
-      );
-      if (check.rows[0].CNT === 0)
-        throw new Error(`Prerequisite class ${prereqId} does not exist`);
+      if (prereqId === classId)
+        throw new Error("Class cannot be its own prerequisite");
 
       await conn.execute(
-        `INSERT INTO CLASS_PREREQUISITE (
-           PREREQUISITE_ID, CLASS_ID, PREREQUISITE_CLASS_ID
-         )
-         VALUES (ALTIUS_DB.PREREQ_SEQ.NEXTVAL, :class_id, :prereq_id)`,
+        `
+        INSERT INTO ALTIUS_DB.CLASS_PREREQUISITE (
+          PREREQUISITE_ID, CLASS_ID, PREREQUISITE_CLASS_ID
+        )
+        VALUES (
+          ALTIUS_DB.PREREQ_SEQ.NEXTVAL,
+          :class_id,
+          :prereq_id
+        )
+        `,
         { class_id: classId, prereq_id: prereqId }
       );
     }
 
     await conn.commit();
-    res.json({ message: "Class and prerequisites added successfully", classId });
+
+    res.status(201).json({
+      message: "Class and prerequisites added successfully",
+      classId
+    });
 
   } catch (e) {
     if (conn) await conn.rollback();
+    console.error(e);
     res.status(400).json({ message: e.message });
   } finally {
     if (conn) await conn.close();
@@ -196,8 +205,8 @@ exports.getClassListWithPrereq = async (req, res) => {
         s.SUBJECT_NAME,
         p.PACKAGE_NAME,
         t.TEACHER_NAME,
-        LISTAGG(cp2.CLASS_NAME, ', ')
-          WITHIN GROUP (ORDER BY cp2.CLASS_NAME) AS PREREQUISITES
+        LISTAGG(cp2.CLASS_ID, ', ')
+          WITHIN GROUP (ORDER BY cp2.CLASS_ID) AS PREREQUISITES
       FROM CLASS c
       JOIN SUBJECT s
         ON c.SUBJECT_ID = s.SUBJECT_ID

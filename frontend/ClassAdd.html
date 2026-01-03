@@ -109,6 +109,7 @@ const selectedPrereqList = document.getElementById("selectedPrereq");
 fetch(`${API}/packages`)
 .then(r => r.json())
 .then(data => {
+    packageSelect.innerHTML = `<option value="">-- Select Package --</option>`;
     data.forEach(p => {
         packageSelect.innerHTML +=
             `<option value="${p.PACKAGE_ID}">${p.PACKAGE_NAME}</option>`;
@@ -119,6 +120,7 @@ fetch(`${API}/packages`)
 fetch(`${API}/teachers`)
 .then(r => r.json())
 .then(data => {
+    teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>`;
     data.forEach(t => {
         teacherSelect.innerHTML +=
             `<option value="${t.TEACHER_ID}">${t.TEACHER_NAME}</option>`;
@@ -139,8 +141,7 @@ packageSelect.addEventListener("change", async () => {
         const subjects = await res.json();
 
         if (subjects.length === 0) {
-            subjectSelect.innerHTML =
-                `<option value="">No subjects in this package</option>`;
+            subjectSelect.innerHTML = `<option value="">No subjects in this package</option>`;
         } else {
             subjects.forEach(s => {
                 subjectSelect.innerHTML +=
@@ -148,13 +149,11 @@ packageSelect.addEventListener("change", async () => {
             });
         }
 
-        // ✅ ALWAYS re-enable after loading
         subjectSelect.disabled = false;
 
     } catch (err) {
         console.error(err);
-        subjectSelect.innerHTML =
-            `<option value="">Failed to load subjects</option>`;
+        subjectSelect.innerHTML = `<option value="">Failed to load subjects</option>`;
         subjectSelect.disabled = false;
     }
 });
@@ -208,21 +207,48 @@ function addPrereq(id) {
 form.onsubmit = async e => {
     e.preventDefault();
 
-    await fetch(`${API}/classes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            name: Class_Name.value,
-            time: Class_Time.value,
-            day: Class_Day.value,
-            subject_id: subjectSelect.value,
-            teacher_id: teacherSelect.value,
-            prerequisites: selectedPrereqs
-        })
-    });
+    // ✅ MOVE validation INSIDE submit handler
+    if (!Class_Name.value || !Class_Time.value || !Class_Day.value) {
+        alert("Please fill in all class details");
+        return;
+    }
 
-    alert("Class added successfully");
-    location.href = "ClassList.html";
+    if (!subjectSelect.value) {
+        alert("Please select a subject");
+        return;
+    }
+
+    if (!teacherSelect.value) {
+        alert("Please select a teacher");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API}/classes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: Class_Name.value,
+                time: Class_Time.value,
+                day: Class_Day.value,
+                subject_id: subjectSelect.value,
+                teacher_id: teacherSelect.value,
+                prerequisites: selectedPrereqs
+            })
+        });
+
+        if (!res.ok) {
+            const msg = await res.text();
+            throw new Error(msg);
+        }
+
+        alert("Class added successfully");
+        location.href = "ClassList.html";
+
+    } catch (err) {
+        alert("Failed to add class:\n" + err.message);
+        console.error(err);
+    }
 };
 
 /* ================= NAV ================= */
