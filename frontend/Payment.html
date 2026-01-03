@@ -143,9 +143,7 @@
             packages.forEach(pkg => {
                 // Parse enrollment IDs from comma-separated string
                 const enrollmentIds = pkg.ENROLLMENT_IDS ? pkg.ENROLLMENT_IDS.split(', ') : [];
-                const paymentStatus = pkg.UNPAID_COUNT > 0 ? 
-                    `${pkg.UNPAID_COUNT} Unpaid, ${pkg.PAID_COUNT} Paid` : 
-                    'All Paid';
+                const paymentStatus = pkg.UNPAID_COUNT > 0 ? 'Unpaid' : 'Paid';
 
                 //Populate paid enrollments when loading data
                 if (pkg.PAID_ENROLLMENT_IDS) {
@@ -154,31 +152,27 @@
                     .forEach(id => paidEnrollmentSet.add(id));
                 }
                 
-                // Create dropdown for enrollment IDs
-                let enrollmentDropdown = `<select class="enrollment-select" onchange="onEnrollmentSelect(this.value, this.closest('tr'))">`;
-
-                enrollmentDropdown += '<option value="">Select Enrollment</option>';
-                enrollmentIds.forEach(id => {
-                    enrollmentDropdown += `<option value="${id}">${id}</option>`;
-                });
-                enrollmentDropdown += '</select>';
-
                 tbody.innerHTML += `
                     <tr>
                         <td>${pkg.PACKAGE_NAME}</td>
                         <td>${pkg.PACKAGE_FEE ? parseFloat(pkg.PACKAGE_FEE).toFixed(2) : '0.00'}</td>
                         <td>${pkg.ENROLLMENT_COUNT}</td>
-                        <td>${paymentStatus}</td>
+                        <td>
+                            <span class="status-badge ${pkg.UNPAID_COUNT > 0 ? 'unpaid' : 'paid'}">
+                                ${paymentStatus}
+                            </span>
+                        </td>
                         <td>${pkg.ENROLLMENT_IDS}</td>
                         <td>
                             <div class="action-buttons">
-                                ${enrollmentDropdown}
-
-                                <button class="button add-payment-btn disabled-btn" disabled title="Payment already completed" onclick="openPaymentModal(selectedEnrollmentId, ${pkg.PACKAGE_FEE || 0})">
+                                <button class="button add-payment-btn ${pkg.UNPAID_COUNT === 0 ? 'disabled-btn' : ''}"
+                                    ${pkg.UNPAID_COUNT === 0 ? 'disabled' : ''}
+                                    onclick="openPaymentModal('${pkg.FIRST_UNPAID_ENROLLMENT_ID}', ${pkg.PACKAGE_FEE || 0})">
                                     Add Payment
                                 </button>
-
-                                <button class="button receipt-btn disabled-btn" disabled onclick="viewReceipt()">
+                                    <button class="button receipt-btn ${pkg.PAID_COUNT === 0 ? 'disabled-btn' : ''}"
+                                    ${pkg.PAID_COUNT === 0 ? 'disabled' : ''}
+                                    onclick="viewReceipt('${pkg.FIRST_PAID_ENROLLMENT_ID}')">
                                     View Receipt
                                 </button>
                             </div>
@@ -275,13 +269,14 @@
         }
     }
     // =====================RECEIPT=====================
-    function viewReceipt() {
-        if (!selectedEnrollmentId || !paidEnrollmentSet.has(selectedEnrollmentId)) {
-            alert("Receipt not available. Payment not made yet.");
+    function viewReceipt(enrollmentId) {
+        if (!enrollmentId) {
+            alert("Receipt not available.");
             return;
         }
-        window.location.href = `Receipt.html?enrollId=${selectedEnrollmentId}`;
+        window.location.href = `Receipt.html?enrollId=${enrollmentId}`;
     }
+
 
     
     /* ===================== INITIAL LOAD ===================== */

@@ -17,15 +17,28 @@ exports.getEnrollmentsByStudent = async (req, res) => {
         pkg.Package_ID,
         pkg.Package_Name,
         NVL(pkg.Package_Fee, 0) AS PACKAGE_FEE,
+
         COUNT(e.Enroll_ID) AS ENROLLMENT_COUNT,
+
         SUM(CASE WHEN e.Payment_ID IS NULL THEN 1 ELSE 0 END) AS UNPAID_COUNT,
         SUM(CASE WHEN e.Payment_ID IS NOT NULL THEN 1 ELSE 0 END) AS PAID_COUNT,
-        LISTAGG(e.Enroll_ID, ', ') 
+
+        LISTAGG(e.Enroll_ID, ', ')
           WITHIN GROUP (ORDER BY e.Enroll_ID) AS ENROLLMENT_IDS,
+
         LISTAGG(
           CASE WHEN e.Payment_ID IS NOT NULL THEN e.Enroll_ID END,
           ', '
-        ) WITHIN GROUP (ORDER BY e.Enroll_ID) AS PAID_ENROLLMENT_IDS
+        ) WITHIN GROUP (ORDER BY e.Enroll_ID) AS PAID_ENROLLMENT_IDS,
+
+        /* ⭐ FIRST unpaid enrollment */
+        MIN(CASE WHEN e.Payment_ID IS NULL THEN e.Enroll_ID END)
+          AS FIRST_UNPAID_ENROLLMENT_ID,
+
+        /* ⭐ FIRST paid enrollment */
+        MIN(CASE WHEN e.Payment_ID IS NOT NULL THEN e.Enroll_ID END)
+          AS FIRST_PAID_ENROLLMENT_ID
+
       FROM ALTIUS_DB.Enrollment e
       JOIN ALTIUS_DB.Package pkg
         ON e.Package_ID = pkg.Package_ID
