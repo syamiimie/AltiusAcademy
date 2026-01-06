@@ -411,34 +411,57 @@ table.section th {
 /* SUMMARY CARD */
 .summary-card {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     background-color: #450050;
     color: white;
-    padding: 20px;
-    border-radius: 8px;
+    padding: 25px;
+    border-radius: 16px;
     margin-bottom: 30px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .summary-item {
     display: flex;
     flex-direction: column;
+    padding: 10px;
 }
 
 .summary-item .label {
     font-size: 14px;
-    color: #777;
+    color: #cccccc;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .summary-item .value {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: bold;
+    color: #ffffff;
+}
+
+/* Highlight items (Total Paid & Outstanding Fees) */
+.summary-item.highlight {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    border-left: 4px solid #8c249c;
 }
 
 .summary-item.highlight .value {
+    font-size: 24px;
+}
+
+/* Total Paid - Green color */
+.summary-item.highlight:not(.outstanding) .value {
     color: #30d675;
-    font-size: 22px;
+}
+
+/* Outstanding Fees - Red color */
+.summary-item.highlight.outstanding .value {
+    color: #ff6b6b;
 }
 
 /* TABLE SECTION */
@@ -457,24 +480,83 @@ table.section th {
 /* PAYMENT TABLE */
 .payment-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     color: white;
-}
-
-.payment-table th,
-.payment-table td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-    text-align: left;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .payment-table th {
+    background-color: #5c1a68;
+    color: white;
+    padding: 16px 12px;
+    text-align: left;
     font-weight: bold;
+    font-size: 15px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
-/* 
-.payment-table tr:hover {
-    background-color: #2d0133;
-} */
+
+.payment-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+    font-size: 14px;
+}
+
+.payment-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.payment-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Action buttons in table */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-buttons .button {
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 13px;
+    min-width: 100px;
+}
+
+/* Status badges */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    display: inline-block;
+    min-width: 70px;
+}
+
+.status-badge.paid {
+    background-color: rgba(48, 214, 117, 0.2);
+    color: #30d675;
+    border: 1px solid #30d675;
+}
+
+.status-badge.unpaid {
+    background-color: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+}
+
+/* Disabled buttons */
+.disabled-btn {
+    background-color: #555555 !important;
+    color: #888888 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    border-color: #555555 !important;
+    opacity: 0.6;
+}
 
 /* RECEIPT BUTTON */
 .btn-receipt {
@@ -495,7 +577,10 @@ table.section th {
     margin-top: 15px;
     color: #999;
     font-style: italic;
+    text-align: center;
+    padding: 20px;
 }
+
 
 /* =====================
    CARD LAYOUT

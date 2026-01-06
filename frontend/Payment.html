@@ -47,6 +47,10 @@
             <span class="label">Total Paid (RM)</span>
             <span id="totalFee" class="value">0.00</span>
         </div>
+        <div class="summary-item highlight">
+            <span class="label">Outstanding Fees (RM)</span>
+            <span id="outstandingFee" class="value outstanding-text">0.00</span>
+        </div>
     </section>
 
     <!-- ENROLLMENTS TABLE -->
@@ -109,16 +113,27 @@
             document.getElementById("studentName").textContent = summaryData.STUDENTNAME || 'N/A';
             document.getElementById("studentId").textContent = studentId;
             document.getElementById("totalFee").textContent = parseFloat(summaryData.TOTALPAID || 0).toFixed(2);
-    
-            // 2️⃣ Fetch grouped enrollments by package
+            
+            // Calculate outstanding fees
             const enrollRes = await fetch(`http://localhost:3000/payment/enrollments?studentId=${studentId}`);
             const packages = await enrollRes.json();
 
-            // DEBUG: Check what data you're getting
-            console.log("Backend response:", packages);
-            console.log("First item:", packages[0]);        
-
-
+            // Reset outstanding fees
+            outstandingFees = 0;
+            
+            if (packages && packages.length > 0) {
+                packages.forEach(pkg => {
+                    // Calculate outstanding for this package: (unpaid count * package fee)
+                    const unpaidCount = pkg.UNPAID_COUNT || 0;
+                    const packageFee = parseFloat(pkg.PACKAGE_FEE) || 0;
+                    outstandingFees += unpaidCount * packageFee;
+                });
+            }
+            
+            // Display outstanding fees
+            document.getElementById("outstandingFee").textContent = outstandingFees.toFixed(2);
+        
+            // 2️⃣ Fetch enrollments
             const tbody = document.getElementById("EnrollmentTable");
             const emptyMessage = document.getElementById("emptyMessage");
             tbody.innerHTML = "";
@@ -129,50 +144,64 @@
             }
             emptyMessage.hidden = true;
 
-            // Update table headers for grouped view
-            document.querySelector("thead tr").innerHTML = `
-                <th>Package</th>
-                <th>Fee (RM)</th>
-                <th>Total Enrollments</th>
-                <th>Payment Status</th>
-                <th>Enrollment IDs</th>
-                <th>Actions</th>
-            `;
-
             paidEnrollmentSet.clear();
+            
+            // Create an array to hold all enrollment rows
+            let allEnrollments = [];
+            
             packages.forEach(pkg => {
                 // Parse enrollment IDs from comma-separated string
                 const enrollmentIds = pkg.ENROLLMENT_IDS ? pkg.ENROLLMENT_IDS.split(', ') : [];
-                const paymentStatus = pkg.UNPAID_COUNT > 0 ? 'Unpaid' : 'Paid';
-
-                //Populate paid enrollments when loading data
+                
+                // Populate paid enrollments when loading data
                 if (pkg.PAID_ENROLLMENT_IDS) {
-                pkg.PAID_ENROLLMENT_IDS
-                    .split(", ")
-                    .forEach(id => paidEnrollmentSet.add(id));
+                    pkg.PAID_ENROLLMENT_IDS
+                        .split(", ")
+                        .filter(id => id !== '')  // Filter out empty strings
+                        .forEach(id => paidEnrollmentSet.add(id.trim()));
                 }
+                
+                // Create an object for each enrollment
+                enrollmentIds.forEach(enrollId => {
+                    if (enrollId && enrollId.trim() !== '') {
+                        allEnrollments.push({
+                            id: enrollId.trim(),
+                            packageName: pkg.PACKAGE_NAME,
+                            packageFee: pkg.PACKAGE_FEE ? parseFloat(pkg.PACKAGE_FEE).toFixed(2) : '0.00',
+                            isPaid: paidEnrollmentSet.has(enrollId.trim())
+                        });
+                    }
+                });
+            });
+            
+            // Sort all enrollments by ID (convert to number for proper numeric sorting)
+            allEnrollments.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+            
+            // Display sorted enrollments
+            allEnrollments.forEach(enroll => {
+                const statusClass = enroll.isPaid ? 'paid' : 'unpaid';
+                const statusText = enroll.isPaid ? 'Paid' : 'Unpaid';
                 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${pkg.PACKAGE_NAME}</td>
-                        <td>${pkg.PACKAGE_FEE ? parseFloat(pkg.PACKAGE_FEE).toFixed(2) : '0.00'}</td>
-                        <td>${pkg.ENROLLMENT_COUNT}</td>
+                        <td>${enroll.id}</td>
+                        <td>${enroll.packageName}</td>
+                        <td>${enroll.packageFee}</td>
                         <td>
-                            <span class="status-badge ${pkg.UNPAID_COUNT > 0 ? 'unpaid' : 'paid'}">
-                                ${paymentStatus}
+                            <span class="status-badge ${statusClass}">
+                                ${statusText}
                             </span>
                         </td>
-                        <td>${pkg.ENROLLMENT_IDS}</td>
                         <td>
                             <div class="action-buttons">
-                                <button class="button add-payment-btn ${pkg.UNPAID_COUNT === 0 ? 'disabled-btn' : ''}"
-                                    ${pkg.UNPAID_COUNT === 0 ? 'disabled' : ''}
-                                    onclick="openPaymentModal('${pkg.FIRST_UNPAID_ENROLLMENT_ID}', ${pkg.PACKAGE_FEE || 0})">
+                                <button class="button add-payment-btn ${enroll.isPaid ? 'disabled-btn' : ''}"
+                                    ${enroll.isPaid ? 'disabled' : ''}
+                                    onclick="openPaymentModal('${enroll.id}', ${enroll.packageFee})">
                                     Add Payment
                                 </button>
-                                    <button class="button receipt-btn ${pkg.PAID_COUNT === 0 ? 'disabled-btn' : ''}"
-                                    ${pkg.PAID_COUNT === 0 ? 'disabled' : ''}
-                                    onclick="viewReceipt('${pkg.FIRST_PAID_ENROLLMENT_ID}')">
+                                <button class="button receipt-btn ${!enroll.isPaid ? 'disabled-btn' : ''}"
+                                    ${!enroll.isPaid ? 'disabled' : ''}
+                                    onclick="viewReceipt('${enroll.id}')">
                                     View Receipt
                                 </button>
                             </div>

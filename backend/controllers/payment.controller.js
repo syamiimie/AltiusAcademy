@@ -2,7 +2,6 @@ const oracledb = require("oracledb");
 const db = require("../db/db");
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
-
 /* ================= GET ENROLLMENTS BY STUDENT ================= */
 exports.getEnrollmentsByStudent = async (req, res) => {
   const { studentId } = req.query;
@@ -19,23 +18,20 @@ exports.getEnrollmentsByStudent = async (req, res) => {
         NVL(pkg.Package_Fee, 0) AS PACKAGE_FEE,
 
         COUNT(e.Enroll_ID) AS ENROLLMENT_COUNT,
-
         SUM(CASE WHEN e.Payment_ID IS NULL THEN 1 ELSE 0 END) AS UNPAID_COUNT,
         SUM(CASE WHEN e.Payment_ID IS NOT NULL THEN 1 ELSE 0 END) AS PAID_COUNT,
 
-        LISTAGG(e.Enroll_ID, ', ')
-          WITHIN GROUP (ORDER BY e.Enroll_ID) AS ENROLLMENT_IDS,
+        LISTAGG(e.Enroll_ID, ', ') 
+          WITHIN GROUP (ORDER BY e.Enroll_ID) AS ENROLLMENT_IDS,  -- Already sorted
 
         LISTAGG(
           CASE WHEN e.Payment_ID IS NOT NULL THEN e.Enroll_ID END,
           ', '
         ) WITHIN GROUP (ORDER BY e.Enroll_ID) AS PAID_ENROLLMENT_IDS,
 
-        /* ⭐ FIRST unpaid enrollment */
         MIN(CASE WHEN e.Payment_ID IS NULL THEN e.Enroll_ID END)
           AS FIRST_UNPAID_ENROLLMENT_ID,
 
-        /* ⭐ FIRST paid enrollment */
         MIN(CASE WHEN e.Payment_ID IS NOT NULL THEN e.Enroll_ID END)
           AS FIRST_PAID_ENROLLMENT_ID
 
@@ -47,7 +43,7 @@ exports.getEnrollmentsByStudent = async (req, res) => {
         pkg.Package_ID,
         pkg.Package_Name,
         pkg.Package_Fee
-      ORDER BY pkg.Package_Name
+      ORDER BY MIN(e.Enroll_ID)  -- Sort packages by their lowest enrollment ID
       `,
       { studentId },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
@@ -206,6 +202,48 @@ exports.getReceiptByEnrollmentId = async (req, res) => {
   } catch (err) {
     console.error("Receipt error:", err);
     res.status(500).send("Error generating receipt");
+  } finally {
+    if (conn) await conn.close();
+  }
+};
+
+/* ================= STUDENT OUTSTANDING FEES ================= */
+exports.getStudentOutstandingFees = async (req, res) => {
+  const studentId = Number(req.query.studentId);
+
+  if (!studentId || isNaN(studentId)) {
+    return res.status(400).json({
+      message: "Valid studentId is required"
+    });
+  }
+  let conn;
+
+  try {
+    conn = await oracledb.getConnection(db);
+
+    const result = await conn.execute(
+      `
+      SELECT
+        COALESCE(SUM(
+          CASE 
+            WHEN e.Payment_ID IS NULL THEN pkg.Package_Fee
+            ELSE 0
+          END
+        ), 0) AS OUTSTANDING_FEES
+      FROM ALTIUS_DB.Enrollment e
+      JOIN ALTIUS_DB.Package pkg
+        ON e.Package_ID = pkg.Package_ID
+      WHERE e.Student_ID = :studentId
+      `,
+      { studentId: { val: studentId, type: oracledb.NUMBER } },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );        
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error("Student outstanding fees error:", err);
+    res.status(500).send("Error calculating outstanding fees");
   } finally {
     if (conn) await conn.close();
   }
