@@ -1,0 +1,92 @@
+/* ===== TOP BAR ===== */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 12px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* LEFT (LOGO) */
+.top-left .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.top-left img {
+    height: 40px;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* ===== NAV MENU ===== */
+.nav-menu {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.nav-menu a {
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.nav-menu a:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+/* ACTIVE PAGE */
+.nav-menu a.active {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+/* ===== RIGHT SIDE ===== */
+.top-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logout-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    border: none;
+    border-radius: 8px;
+    background: #ef4444;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background: #dc2626;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+}

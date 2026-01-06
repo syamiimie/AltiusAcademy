@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Student List</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f6f9;
+        }
+
+        /* ================= TOP BAR ================= */
+        .topbar {
+            height: 56px;
+            background: #f1f1f1;
+            color: #111;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: #450050;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .top-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .top-logo img {
+            height: 30px;
+        }
+
+        .top-logo span {
+            font-weight: 600;
+            font-size: 16px;
+            color: #450050;
+        }
+
+        .top-right {
+            position: relative;
+        }
+
+        .user-btn {
+            cursor: pointer;
+            font-size: 14px;
+            color: #450050;
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: white;
+            color: #111;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            overflow: hidden;
+            min-width: 160px;
+            z-index: 100;
+        }
+
+        .user-dropdown a {
+            display: block;
+            padding: 10px 14px;
+            text-decoration: none;
+            color: #111;
+            font-size: 14px;
+        }
+
+        .user-dropdown a:hover {
+            background: #f3f4f6;
+        }
+
+        /* ================= LAYOUT ================= */
+        .layout {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+
+        /* ================= SIDEBAR ================= */
+        .sidebar {
+            width: 230px;
+            background: #450050;
+            color: white;
+            padding: 16px;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .menu a {
+            position: relative;
+            color: #f3e8ff;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .menu a:hover {
+            background: #5a155a;
+        }
+
+        .menu a.active {
+            background: #6b1b6b;
+            font-weight: 600;
+        }
+
+        .sidebar.collapsed .menu a span {
+            display: none;
+        }
+
+        .sidebar.collapsed .menu a {
+            text-align: center;
+        }
+
+        /* ================= MAIN ================= */
+        .main {
+            flex: 1;
+            padding: 24px 24px 24px 32px; /* extra left spacing */
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        /* ================= TABLE ================= */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        th {
+            background: #f3f4f6;
+            padding: 12px;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            background: #450050;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            background: #5a155a;
+        }
+
+        .button.delete {
+            background: #7a1a7a;
+        }
+
+        .button.delete:hover {
+            background: #5a155a;
+        }
+
+        /* Student type box */
+        .type-box {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+
+        .type-main {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .type-sub {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+    <div class="top-left">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+        <a href="StaffHomepage.html" class="top-logo">
+            <img src="images/logo1.png" alt="Altius Academy">
+            <span>Altius Academy</span>
+        </a>
+    </div>
+
+    <div class="top-right">
+        <div class="user-btn" onclick="toggleUserMenu()">Staff ▾</div>
+
+        <div class="user-dropdown" id="userDropdown">
+            <a href="#">My Profile</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="menu">
+            <a href="TeacherList.html"><span>Teacher</span></a>
+            <a href="StudentList.html" class="active"><span>Student</span></a>
+            <a href="ClassList.html"><span>Class</span></a>
+            <a href="EnrollmentList.html"><span>Enrollment</span></a>
+            <a href="PackageList.html"><span>Package</span></a>
+            <a href="SubjectList.html"><span>Subject</span></a>
+            <a href="AttendanceList.html"><span>Attendance</span></a>
+            <a href="report.html"><span>Report</span></a>
+        </nav>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <main class="main">
+
+        <div class="page-header">
+            <h2>Student List</h2>
+            <a href="StudentAdd.html" class="button">Add</a>
+        </div>
+
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>IC</th>
+                <th>Address</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Type</th>
+                <th>Action</th>
+            </tr>
+            <tbody id="studentTable"></tbody>
+        </table>
+
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
+function toggleUserMenu() {
+    const menu = document.getElementById("userDropdown");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+
+/* close dropdown when clicking outside */
+document.addEventListener("click", function (e) {
+    const dropdown = document.getElementById("userDropdown");
+    const userBtn = document.querySelector(".user-btn");
+    if (!userBtn.contains(e.target)) {
+        dropdown.style.display = "none";
+    }
+});
+
+function logout() {
+    localStorage.removeItem("staff");
+    window.location.href = "login.html";
+}
+
+/* ================= STUDENT DATA ================= */
+fetch("http://localhost:3000/students")
+.then(res => res.json())
+.then(data => {
+    const table = document.getElementById("studentTable");
+    table.innerHTML = "";
+
+    data.forEach(s => {
+        let typeDisplay = "";
+
+        if (s.STUDENT_TYPE === "Primary") {
+            typeDisplay = `
+                <div class="type-box">
+                    <div class="type-main">Primary</div>
+                    <div class="type-sub">${s.STUDENT_YEAR ?? "-"}</div>
+                </div>`;
+        }
+
+        if (s.STUDENT_TYPE === "Secondary") {
+            typeDisplay = `
+                <div class="type-box">
+                    <div class="type-main">Secondary</div>
+                    <div class="type-sub">
+                        Form ${s.STUDENT_FORM ?? "-"} · ${s.STREAM ?? "No Stream"}
+                    </div>
+                </div>`;
+        }
+
+        table.innerHTML += `
+        <tr>
+            <td>${s.STUDENT_ID}</td>
+            <td>${s.STUDENT_NAME}</td>
+            <td>${s.STUDENT_IC ?? "-"}</td>
+            <td>${s.STUDENT_ADDRESS ?? "-"}</td>
+            <td>${s.STUDENT_EMAIL ?? "-"}</td>
+            <td>${s.STUDENT_PHONENUM ?? "-"}</td>
+            <td>${typeDisplay}</td>
+            <td class="action-cell">
+                <a href="StudentEdit.html?id=${s.STUDENT_ID}" class="button">Edit</a>
+                <button class="button delete" onclick="del(${s.STUDENT_ID})">Delete</button>
+            </td>
+        </tr>`;
+    });
+});
+
+function del(id) {
+    if (confirm("Delete this student?")) {
+        fetch(`http://localhost:3000/students/${id}`, { method: "DELETE" })
+            .then(() => location.reload());
+    }
+}
+</script>
+
+</body>
+</html>
