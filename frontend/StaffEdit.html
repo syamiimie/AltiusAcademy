@@ -9,7 +9,6 @@
 
 <body>
 
-<!-- HEADER -->
 <header class="top-bar">
     <div class="logo">
         <a href="StaffHomepage.html">
@@ -21,30 +20,27 @@
         <a href="TeacherList.html">Teacher</a>
         <a href="StudentList.html">Student</a>
         <a href="ClassList.html">Class</a>
-        <a href="EnrollmentList.html" class="active">Enrollment</a>
+        <a href="EnrollmentList.html">Enrollment</a>
         <a href="PackageList.html">Package</a>
-        <a href="SubjectList.html" class="active">Subject</a>
+        <a href="SubjectList.html">Subject</a>
         <a href="report.html">Report</a>
     </nav>
 
-    <!-- USER ICON + LOGOUT -->
-    <div class="user-icon" style="display:flex; gap:10px; align-items:center;">
+    <div class="user-icon">
         <button class="button" onclick="logout()">Logout</button>
-        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
-        
+        <span onclick="goStaffHome()">👤</span>
     </div>
-
 </header>
 
-<!-- MAIN CONTENT -->
 <main class="content">
 <form id="staffEditForm">
 <table class="form">
     <tr>
-        <td class="avatar" colspan="2" style="text-align:center;">👩‍💻</td>
+        <td colspan="2" class="avatar">👩‍💻</td>
     </tr>
+
     <tr>
-        <td class="title" colspan="2">Edit Staff Profile</td>
+        <td colspan="2" class="title">Edit Staff Profile</td>
     </tr>
 
     <tr>
@@ -58,14 +54,21 @@
     </tr>
 
     <tr>
-        <td>Phone Number:</td>
-        <td><input type="text" id="Staff_PhoneNum" required></td>
+        <td>Phone:</td>
+        <td><input type="text" id="Staff_PhoneNum"></td>
     </tr>
 
     <tr>
         <td>Username:</td>
-        <!-- 🔥 READONLY, NOT DISABLED -->
         <td><input type="text" id="Staff_Username" readonly></td>
+    </tr>
+
+    <tr>
+        <td>New Password:</td>
+        <td>
+            <input type="password" id="Staff_Password"
+                   placeholder="Leave blank to keep current password">
+        </td>
     </tr>
 
     <tr>
@@ -78,31 +81,22 @@
 </main>
 
 <script>
-/* =========================
-   AUTH CHECK
-========================= */
-const staffId = localStorage.getItem("staff_id");
-
-if (!staffId) {
+/* ================= AUTH ================= */
+const staff = JSON.parse(localStorage.getItem("staff"));
+if (!staff) {
     alert("Please login first");
     location.href = "login.html";
 }
 
-/* =========================
-   LOAD STAFF DATA
-========================= */
-fetch(`http://localhost:3000/staff/${staffId}`)
-.then(res => res.json())
-.then(s => {
-    Staff_Name.value = s.STAFF_NAME ?? "";
-    Staff_Email.value = s.STAFF_EMAIL ?? "";
-    Staff_PhoneNum.value = s.STAFF_PHONENUM ?? "";   // ✅ FIXED
-    Staff_Username.value = s.STAFF_USERNAME ?? "";
-});
+const staffId = staff.STAFF_ID;
 
-/* =========================
-   UPDATE STAFF
-========================= */
+/* ================= PREFILL ================= */
+Staff_Name.value = staff.STAFF_NAME ?? "";
+Staff_Email.value = staff.STAFF_EMAIL ?? "";
+Staff_PhoneNum.value = staff.STAFF_PHONENUM ?? "";
+Staff_Username.value = staff.STAFF_USERNAME ?? "";
+
+/* ================= UPDATE ================= */
 staffEditForm.addEventListener("submit", async e => {
     e.preventDefault();
 
@@ -110,8 +104,12 @@ staffEditForm.addEventListener("submit", async e => {
         name: Staff_Name.value.trim(),
         email: Staff_Email.value.trim(),
         phone: Staff_PhoneNum.value.trim(),
-        username: Staff_Username.value.trim()   // ✅ MUST SEND
+        username: Staff_Username.value.trim()
     };
+
+    if (Staff_Password.value.trim() !== "") {
+        payload.password = Staff_Password.value.trim();
+    }
 
     const res = await fetch(`http://localhost:3000/staff/${staffId}`, {
         method: "PUT",
@@ -120,22 +118,29 @@ staffEditForm.addEventListener("submit", async e => {
     });
 
     if (res.ok) {
-        alert("Profile updated");
+        const updatedStaff = {
+            ...staff,
+            STAFF_NAME: payload.name,
+            STAFF_EMAIL: payload.email,
+            STAFF_PHONENUM: payload.phone
+        };
+
+        localStorage.setItem("staff", JSON.stringify(updatedStaff));
+
+        alert("Profile updated successfully");
         location.href = "StaffHomepage.html";
     } else {
         alert("Update failed");
     }
 });
-function goStaffHome(){
-    const staff = localStorage.getItem("staff");
 
-    if(!staff){
-        alert("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
+function logout() {
+    localStorage.removeItem("staff");
+    location.href = "login.html";
+}
 
-    window.location.href = "StaffHomepage.html";
+function goStaffHome() {
+    location.href = "StaffHomepage.html";
 }
 </script>
 

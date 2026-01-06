@@ -57,7 +57,7 @@ exports.addStaff = async (req, res) => {
 };
 
 /* =========================
-   UPDATE STAFF  ✅ FIXED
+   UPDATE STAFF (SAFE)
 ========================= */
 exports.updateStaff = async (req, res) => {
   const id = req.params.id;
@@ -67,22 +67,48 @@ exports.updateStaff = async (req, res) => {
   try {
     conn = await oracledb.getConnection(db);
 
-    const result = await conn.execute(
-      `
+    const fields = [];
+    const params = { id };
+
+    if (name) {
+      fields.push("STAFF_NAME = :name");
+      params.name = name;
+    }
+
+    if (email) {
+      fields.push("STAFF_EMAIL = :email");
+      params.email = email;
+    }
+
+    if (phone !== undefined) {
+      fields.push("STAFF_PHONENUM = :phone");
+      params.phone = phone;
+    }
+
+    if (username) {
+      fields.push("STAFF_USERNAME = :username");
+      params.username = username;
+    }
+
+    if (password) {
+      fields.push("STAFF_PASSWORD = :password");
+      params.password = password;
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ message: "No data to update" });
+    }
+
+    const sql = `
       UPDATE STAFF SET
-        STAFF_NAME = :name,
-        STAFF_EMAIL = :email,
-        STAFF_PHONENUM = :phone,
-        STAFF_USERNAME = :username,
-        STAFF_PASSWORD = :password
+      ${fields.join(", ")}
       WHERE STAFF_ID = :id
-      `,
-      { name, email, phone, username, password, id },
-      { autoCommit: true }
-    );
+    `;
+
+    const result = await conn.execute(sql, params, { autoCommit: true });
 
     if (result.rowsAffected === 0) {
-      return res.status(400).json({ message: "Update failed" });
+      return res.status(404).json({ message: "Staff not found" });
     }
 
     res.json({ success: true });

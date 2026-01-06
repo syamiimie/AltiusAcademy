@@ -52,6 +52,7 @@
             <p class="name" id="staffName">-</p>
             <p class="email" id="staffEmail">-</p>
             <p class="phone" id="staffPhone">-</p>
+            <p class="username" id="staffUsername">-</p>
 
             <div style="display:flex; gap:12px; justify-content:center; margin-top:15px;">
                 <a href="StaffEdit.html" class="btn">Edit Profile</a>
@@ -91,38 +92,64 @@
 <!-- ================= SCRIPT ================= -->
 <script>
 /* ================= AUTH CHECK ================= */
-const staff = JSON.parse(localStorage.getItem("staff"));
+const storedStaff = JSON.parse(localStorage.getItem("staff"));
 
-if (!staff) {
+if (!storedStaff) {
     alert("Please login first");
     window.location.href = "login.html";
 }
 
-/* ================= DISPLAY STAFF INFO ================= */
-document.getElementById("staffName").innerText = staff.STAFF_NAME;
-document.getElementById("staffEmail").innerText = staff.STAFF_EMAIL;
-document.getElementById("staffPhone").innerText =
-    staff.STAFF_PHONENUM ? staff.STAFF_PHONENUM : "-";
+const staffId = storedStaff.STAFF_ID;
+
+/* ================= LOAD STAFF PROFILE ================= */
+fetch(`http://localhost:3000/staff/${staffId}`)
+    .then(res => res.json())
+    .then(staff => {
+
+        // 🔁 sync localStorage with DB
+        localStorage.setItem("staff", JSON.stringify(staff));
+
+        document.getElementById("staffName").innerText =
+            staff.STAFF_NAME ?? "-";
+
+        document.getElementById("staffEmail").innerText =
+            staff.STAFF_EMAIL ?? "-";
+
+        document.getElementById("staffPhone").innerText =
+            staff.STAFF_PHONENUM ?? "-";
+
+        document.getElementById("staffUsername").innerText =
+            staff.STAFF_USERNAME ? `@${staff.STAFF_USERNAME}` : "-";
+    })
+    .catch(err => {
+        console.error("Failed to load staff profile:", err);
+    });
 
 /* ================= DASHBOARD STATS ================= */
 fetch("http://localhost:3000/dashboard")
     .then(res => res.json())
     .then(data => {
-        document.getElementById("totalStudents").innerText = data.totalStudents;
-        document.getElementById("highestGrade").innerText = data.highestGrade;
-        document.getElementById("avgAttendance").innerText = data.avgAttendance;
+        document.getElementById("totalStudents").innerText =
+            data.totalStudents ?? "--";
 
-        document.getElementById("totalTeachers").innerText = data.totalTeachers;
+        document.getElementById("highestGrade").innerText =
+            data.highestGrade ?? "--";
+
+        document.getElementById("avgAttendance").innerText =
+            data.avgAttendance ?? "--";
+
+        document.getElementById("totalTeachers").innerText =
+            data.totalTeachers ?? "--";
+
         document.getElementById("avgStudentsPerTeacher").innerText =
-            data.avgStudentsPerTeacher;
-        document.getElementById("highestPassingRate").innerText =
-            data.highestPassingRate;
-    })
-    .catch(err => {
-        console.error("Dashboard fetch error:", err);
-    });
+            data.avgStudentsPerTeacher ?? "--";
 
-/* ================= NAVIGATION ================= */
+        document.getElementById("highestPassingRate").innerText =
+            data.highestPassingRate ?? "--";
+    })
+    .catch(err => console.error("Dashboard error:", err));
+
+/* ================= NAV ================= */
 function goStaffHome() {
     window.location.href = "StaffHomepage.html";
 }
