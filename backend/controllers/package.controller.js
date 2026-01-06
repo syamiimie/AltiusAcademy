@@ -26,10 +26,16 @@ exports.getPackageById = async (req, res) => {
   try {
     conn = await oracledb.getConnection(db);
     const r = await conn.execute(
-      `SELECT * FROM "PACKAGE" WHERE PACKAGE_ID = :id
-      GROUP BY PACKAGE_NAME`,
+      `SELECT *
+       FROM "PACKAGE"
+       WHERE PACKAGE_ID = :id`,
       { id: req.params.id }
     );
+
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: "Package not found" });
+    }
+
     res.json(r.rows[0]);
   } catch (e) {
     console.error(e);
