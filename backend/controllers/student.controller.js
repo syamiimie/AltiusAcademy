@@ -48,18 +48,43 @@ exports.getAllStudents = async (req, res) => {
 
 
 // =======================
-// GET BY ID
+// GET STUDENT BY ID 
 // =======================
 exports.getStudentById = async (req, res) => {
   let conn;
   try {
     conn = await oracledb.getConnection(db);
-    const r = await conn.execute(
-      "SELECT * FROM STUDENT WHERE STUDENT_ID = :id",
-      { id: req.params.id }
-    );
+
+    const r = await conn.execute(`
+      SELECT 
+        s.STUDENT_ID,
+        s.STUDENT_NAME,
+        s.STUDENT_IC,
+        s.STUDENT_ADDRESS,
+        s.STUDENT_EMAIL,
+        s.STUDENT_PHONENUM,
+        s.STUDENT_TYPE,
+
+        p.STUDENT_YEAR,
+        sec.STUDENT_FORM,
+        sec.STREAM
+
+      FROM STUDENT s
+      LEFT JOIN PRIMARY_STUDENT p
+        ON s.STUDENT_ID = p.STUDENT_ID
+      LEFT JOIN SECONDARY_STUDENT sec
+        ON s.STUDENT_ID = sec.STUDENT_ID
+      WHERE s.STUDENT_ID = :id
+    `, { id: req.params.id });
+
+    if (r.rows.length === 0) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
     res.json(r.rows[0]);
+
   } catch (e) {
+    console.error(e);
     res.status(500).json(e);
   } finally {
     if (conn) await conn.close();
