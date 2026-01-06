@@ -73,7 +73,7 @@ exports.addPaymentForEnrollment = async (req, res) => {
       INSERT INTO ALTIUS_DB.Payment
         (Payment_ID, Payment_Date, Total_Fees)
       VALUES
-        (ALTIUS_DB.Payment_SEQ.NEXTVAL, :paymentDate, :totalFees)
+        (ALTIUS_DB.Payment_SEQ.NEXTVAL, TO_DATE(:paymentDate, 'YYYY-MM-DD'), :totalFees)
       RETURNING Payment_ID INTO :paymentId
       `,
       {
