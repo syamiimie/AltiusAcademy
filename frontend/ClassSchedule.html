@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Altius Academy | Class Schedule</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Timetable styles */
+        .timetable {
+            border-collapse: collapse;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .timetable th, .timetable td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .timetable th {
+            background-color: #450050;
+            color:white
+        }
+
+        .time-slot {
+            font-weight: bold;
+            background-color: black;
+            color: white;
+        }
+
+        /* Class box style */
+        .class-box {
+            padding: 4px;
+            margin: 2px 0;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px dashed #999;
+            margin: 4px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="top-bar">
+    <div class="logo">
+        <a href="StaffHomepage.html">
+            <img src="images/logo1.png">
+        </a>
+    </div>
+
+    <nav class="nav-menu">
+        <a href="TeacherList.html">Teacher</a>
+        <a href="StudentList.html">Student</a>
+        <a href="ClassList.html">Class</a>
+        <a href="EnrollmentList.html">Enrollment</a>
+        <a href="PackageList.html">Package</a>
+        <a href="SubjectList.html">Subject</a>
+        <a href="AttendanceList.html">Attendance</a>
+        <a href="report.html">Report</a>
+    </nav>
+
+    <div class="user-icon" style="display:flex; gap:10px;">
+        <button class="button" onclick="logout()">Logout</button>
+        <span onclick="goStaffHome()" style="cursor:pointer;">👤</span>
+    </div>
+</header>
+
+<main class="content">
+    <h2>Class Schedule</h2><br>
+    <table class="timetable" id="scheduleTable">
+        <thead>
+            <tr>
+                <th>Time / Day</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+            </tr>
+        </thead>
+        <tbody id="timetableBody">
+            <!-- Timetable rows generated dynamically -->
+        </tbody>
+    </table>
+</main>
+
+<script>
+function goStaffHome(){
+    if(!localStorage.getItem("staff")){
+        alert("Please login first");
+        location.href="login.html";
+        return;
+    }
+    location.href="StaffHomepage.html";
+}
+
+function logout(){
+    localStorage.removeItem("staff");
+    location.href="login.html";
+}
+
+function getRandomColor() {
+    const hue = Math.floor(Math.random() * 360);
+    return `hsl(${hue}, 70%, 60%)`; 
+}
+
+// Fetch class schedule
+fetch("http://localhost:3000/classes/schedule")
+.then(res => res.json())
+.then(data => {
+    const timeSlots = [...new Set(data.map(c => c.CLASS_TIME))].sort();
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    const tbody = document.getElementById("timetableBody");
+    tbody.innerHTML = "";
+
+    timeSlots.forEach(time => {
+        const tr = document.createElement("tr");
+        const timeCell = document.createElement("td");
+        timeCell.className = "time-slot";
+        timeCell.textContent = time;
+        tr.appendChild(timeCell);
+
+        days.forEach(day => {
+            const cell = document.createElement("td");
+            const classes = data.filter(c => c.CLASS_TIME === time && c.CLASS_DAY === day);
+
+            classes.forEach((c, index) => {
+                const div = document.createElement("div");
+                div.className = `class-box`;
+                div.style.backgroundColor = getRandomColor();
+                div.innerHTML = `
+                    <strong>${c.CLASS_NAME}</strong><br>
+                    ${c.SUBJECT_NAME}<br>
+                    ${c.TEACHER_NAME}<br>
+                    ${c.PREREQUISITES || ''}
+                `;
+                cell.appendChild(div);
+
+                // Add separator if multiple classes
+                if(index < classes.length - 1){
+                    const hr = document.createElement("hr");
+                    cell.appendChild(hr);
+                }
+            });
+
+            tr.appendChild(cell);
+        });
+
+        tbody.appendChild(tr);
+    });
+});
+</script>
+
+</body>
+</html>

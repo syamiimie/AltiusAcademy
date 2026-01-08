@@ -11,6 +11,9 @@ router.get("/", classController.getAllClasses);
 // GET class list with prerequisites
 router.get("/with-prereq", classController.getClassListWithPrereq);
 
+// GET class schedule
+router.get("/schedule", classController.getClassSchedule);
+
 // GET class by ID (for Edit page)
 router.get("/:id", classController.getClassById);
 

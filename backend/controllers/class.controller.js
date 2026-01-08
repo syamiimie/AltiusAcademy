@@ -332,4 +332,27 @@ exports.deletePrerequisite = async (req, res) => {
     }
 };
 
+/* ================= CLASS SCHEDULE ================= */
+exports.getClassSchedule = async (req, res) => {
+  let conn;
+  try {
+    conn = await oracledb.getConnection(db);
+
+    const r = await conn.execute(`
+      SELECT *
+      FROM CLASS_SCHEDULE_VIEW
+      ORDER BY CLASS_DAY, CLASS_TIME
+    `);
+
+    res.json(r.rows);
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Failed to load class schedule" });
+  } finally {
+    if (conn) await conn.close();
+  }
+};
+
+
 
