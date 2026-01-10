@@ -14,48 +14,42 @@ exports.financialReport = async (req, res) => {
   try {
     conn = await oracledb.getConnection(db);
 
-    // 1️⃣ Fetch payment details per student
+    // 1️ Fetch payment details per student
     const paymentsResult = await conn.execute(
       `
       SELECT 
           s.STUDENT_NAME,
-          p.PACKAGE_NAME,
-          p.PACKAGE_FEE AS TOTAL_FEE,
-          NVL(r.total_paid,0) AS AMOUNT_PAID,
-          p.PACKAGE_FEE - NVL(r.total_paid,0) AS OUTSTANDING
+          pck.PACKAGE_NAME,
+          pck.PACKAGE_FEE AS TOTAL_FEE,
+          NVL(pay.Total_Fees,0) AS AMOUNT_PAID,
+          pck.PACKAGE_FEE - NVL(pay.Total_Fees,0) AS OUTSTANDING
       FROM ENROLLMENT e
       JOIN STUDENT s ON e.STUDENT_ID = s.STUDENT_ID
-      JOIN PACKAGE p ON e.PACKAGE_ID = p.PACKAGE_ID
-      LEFT JOIN (
-          SELECT PAYMENT_ID, SUM(RECEIPT_AMOUNT) AS total_paid
-          FROM RECEIPT
-          GROUP BY PAYMENT_ID
-      ) r ON e.PAYMENT_ID = r.PAYMENT_ID
+      JOIN PACKAGE pck ON e.PACKAGE_ID = pck.PACKAGE_ID
+      LEFT JOIN PAYMENT pay ON e.PAYMENT_ID = pay.PAYMENT_ID
       WHERE TO_CHAR(e.ENROLL_DATE,'YYYY-MM') = :month
       ORDER BY s.STUDENT_NAME
       `,
       { month }
     );
 
-    // 2️⃣ Compute summary totals
+
+      // 2️ Compute summary totals
     const summaryResult = await conn.execute(
       `
       SELECT 
-          SUM(p.PACKAGE_FEE) AS TOTAL_REVENUE,
-          SUM(NVL(r.total_paid,0)) AS TOTAL_COLLECTED,
-          SUM(p.PACKAGE_FEE - NVL(r.total_paid,0)) AS OUTSTANDING_FEES,
+          SUM(pck.PACKAGE_FEE) AS TOTAL_REVENUE,
+          SUM(NVL(pay.Total_Fees,0)) AS TOTAL_COLLECTED,
+          SUM(pck.PACKAGE_FEE - NVL(pay.Total_Fees,0)) AS OUTSTANDING_FEES,
           COUNT(*) AS TOTAL_ENROLLMENT
       FROM ENROLLMENT e
-      JOIN PACKAGE p ON e.PACKAGE_ID = p.PACKAGE_ID
-      LEFT JOIN (
-          SELECT PAYMENT_ID, SUM(RECEIPT_AMOUNT) AS total_paid
-          FROM RECEIPT
-          GROUP BY PAYMENT_ID
-      ) r ON e.PAYMENT_ID = r.PAYMENT_ID
+      JOIN PACKAGE pck ON e.PACKAGE_ID = pck.PACKAGE_ID
+      LEFT JOIN PAYMENT pay ON e.PAYMENT_ID = pay.PAYMENT_ID
       WHERE TO_CHAR(e.ENROLL_DATE,'YYYY-MM') = :month
       `,
       { month }
     );
+
 
     res.json({
       summary: summaryResult.rows[0] || {
