@@ -43,7 +43,7 @@ exports.getEnrollmentsByStudent = async (req, res) => {
         pkg.Package_ID,
         pkg.Package_Name,
         pkg.Package_Fee
-      ORDER BY MIN(e.Enroll_ID)  -- Sort packages by their lowest enrollment ID
+      ORDER BY MIN(e.Enroll_ID)  
       `,
       { studentId },
       { outFormat: oracledb.OUT_FORMAT_OBJECT }

@@ -677,6 +677,7 @@ table.section th {
 }
 
 .payment-title {
+    color:aqua;
     margin-top: 15px;
     text-decoration: underline;
 }
