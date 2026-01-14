@@ -84,6 +84,8 @@
                 <th>Wednesday</th>
                 <th>Thursday</th>
                 <th>Friday</th>
+                <th>Saturday</th>
+                <th>Sunday</th>
             </tr>
         </thead>
         <tbody id="timetableBody">
@@ -112,17 +114,26 @@ function getRandomColor() {
     return `hsl(${hue}, 70%, 60%)`; 
 }
 
-// Fetch class schedule
 fetch("http://localhost:3000/classes/schedule")
 .then(res => res.json())
 .then(data => {
     const timeSlots = [...new Set(data.map(c => c.CLASS_TIME))].sort();
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    const days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+    ];
+
     const tbody = document.getElementById("timetableBody");
     tbody.innerHTML = "";
 
     timeSlots.forEach(time => {
         const tr = document.createElement("tr");
+
         const timeCell = document.createElement("td");
         timeCell.className = "time-slot";
         timeCell.textContent = time;
@@ -130,23 +141,25 @@ fetch("http://localhost:3000/classes/schedule")
 
         days.forEach(day => {
             const cell = document.createElement("td");
-            const classes = data.filter(c => c.CLASS_TIME === time && c.CLASS_DAY === day);
+
+            const classes = data.filter(
+                c => c.CLASS_TIME === time && c.CLASS_DAY === day
+            );
 
             classes.forEach((c, index) => {
                 const div = document.createElement("div");
-                div.className = `class-box`;
+                div.className = "class-box";
                 div.style.backgroundColor = getRandomColor();
                 div.innerHTML = `
                     <strong>${c.CLASS_NAME}</strong><br>
                     ${c.SUBJECT_NAME}<br>
                     ${c.TEACHER_NAME}<br>
+                    ${c.PREREQUISITES || ''}
                 `;
                 cell.appendChild(div);
 
-                // Add separator if multiple classes
                 if(index < classes.length - 1){
-                    const hr = document.createElement("hr");
-                    cell.appendChild(hr);
+                    cell.appendChild(document.createElement("hr"));
                 }
             });
 
@@ -156,6 +169,7 @@ fetch("http://localhost:3000/classes/schedule")
         tbody.appendChild(tr);
     });
 });
+
 </script>
 
 </body>
