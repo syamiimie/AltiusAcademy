@@ -8,21 +8,13 @@
 
     <style>
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            .financial-report, .financial-report * {
-                visibility: visible;
-            }
+            body * { visibility: hidden; }
+            .financial-report, .financial-report * { visibility: visible; }
             .financial-report {
                 position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
+                left: 0; top: 0; width: 100%;
             }
-            .print-btn {
-                display: none;
-            }
+            .print-btn { display: none; }
         }
     </style>
 </head>
@@ -40,7 +32,7 @@
         <a href="TeacherList.html">Teacher</a>
         <a href="StudentList.html">Student</a>
         <a href="ClassList.html">Class</a>
-        <a href="EnrollmentList.html" class="active">Enrollment</a>
+        <a href="EnrollmentList.html">Enrollment</a>
         <a href="PackageList.html">Package</a>
         <a href="SubjectList.html">Subject</a>
         <a href="AttendanceList.html">Attendance</a>
@@ -56,6 +48,12 @@
     <form id="reportForm" style="text-align:center; margin-bottom:20px;">
         <label><strong>Report Period:</strong></label>
         <input type="month" id="month" required>
+
+        <label style="margin-left:15px;">
+            <input type="checkbox" id="outstandingOnly">
+            Outstanding Fees Only
+        </label>
+
         <button type="submit" class="button">Generate</button>
         <button type="button" onclick="window.print()" class="button print-btn">Print</button>
     </form>
@@ -104,6 +102,8 @@ document.getElementById("reportForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
     const month = document.getElementById("month").value;
+    const outstandingOnly = document.getElementById("outstandingOnly").checked;
+
     if (!month) {
         alert("Please select a report month.");
         return;
@@ -115,53 +115,53 @@ document.getElementById("reportForm").addEventListener("submit", function (e) {
             maximumFractionDigits: 2
         })}`;
 
-    // Call our backend endpoint
-    fetch(`http://localhost:3000/reports/financial-report?month=${month}`)
-        .then(response => response.json())
-        .then(data => {
-            // Update summary cards
-            document.getElementById("totalRevenue").innerText =
-                formatRM(data.summary.TOTAL_REVENUE);
+    fetch(
+        `http://localhost:3000/reports/financial-report?month=${month}&outstandingOnly=${outstandingOnly}`
+    )
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("totalRevenue").innerText =
+            formatRM(data.summary.TOTAL_REVENUE);
 
-            document.getElementById("totalCollected").innerText =
-                formatRM(data.summary.TOTAL_COLLECTED);
+        document.getElementById("totalCollected").innerText =
+            formatRM(data.summary.TOTAL_COLLECTED);
 
-            document.getElementById("outstandingFees").innerText =
-                formatRM(data.summary.OUTSTANDING_FEES);
+        document.getElementById("outstandingFees").innerText =
+            formatRM(data.summary.OUTSTANDING_FEES);
 
-            document.getElementById("totalEnrollment").innerText =
-                data.summary.TOTAL_ENROLLMENT || 0;
+        document.getElementById("totalEnrollment").innerText =
+            data.summary.TOTAL_ENROLLMENT || 0;
 
-            // Update payment table
-            const table = document.getElementById("paymentTable");
-            table.innerHTML = "";
+        const table = document.getElementById("paymentTable");
+        table.innerHTML = "";
 
-            if (!data.payments || data.payments.length === 0) {
-                table.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align:center;">
-                            No payment records found for this period
-                        </td>
-                    </tr>`;
-                return;
-            }
+        if (!data.payments || data.payments.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center;">
+                        No records found
+                    </td>
+                </tr>`;
+            return;
+        }
 
-            data.payments.forEach(p => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${p.STUDENT_NAME}</td>
-                        <td>${p.PACKAGE_NAME}</td>
-                        <td>${formatRM(p.TOTAL_FEE)}</td>
-                        <td>${formatRM(p.AMOUNT_PAID)}</td>
-                        <td>${formatRM(p.OUTSTANDING)}</td>
-                    </tr>`;
-            });
-        })
-        .catch(error => {
-            console.error(error);
-            alert("Failed to generate financial report. Please try again.");
+        data.payments.forEach(p => {
+            table.innerHTML += `
+                <tr>
+                    <td>${p.STUDENT_NAME}</td>
+                    <td>${p.PACKAGE_NAME}</td>
+                    <td>${formatRM(p.TOTAL_FEE)}</td>
+                    <td>${formatRM(p.AMOUNT_PAID)}</td>
+                    <td>${formatRM(p.OUTSTANDING)}</td>
+                </tr>`;
         });
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Failed to generate financial report");
+    });
 });
 </script>
+
 </body>
 </html>

@@ -1,10 +1,10 @@
 const oracledb = require("oracledb");
-const db = require("../db/db"); // your DB config
+const db = require("../db/db");
 
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
 exports.financialReport = async (req, res) => {
-  const { month } = req.query; // expects "YYYY-MM"
+  const { month, outstandingOnly } = req.query;
   let conn;
 
   if (!month) {
@@ -14,7 +14,9 @@ exports.financialReport = async (req, res) => {
   try {
     conn = await oracledb.getConnection(db);
 
-    // 1️ Fetch payment details per student
+    /* ===============================
+       PAYMENT DETAILS (DETAIL LEVEL)
+       =============================== */
     const paymentsResult = await conn.execute(
       `
       SELECT 
@@ -28,13 +30,17 @@ exports.financialReport = async (req, res) => {
       JOIN PACKAGE pck ON e.PACKAGE_ID = pck.PACKAGE_ID
       LEFT JOIN PAYMENT pay ON e.PAYMENT_ID = pay.PAYMENT_ID
       WHERE TO_CHAR(e.ENROLL_DATE,'YYYY-MM') = :month
+      ${outstandingOnly === "true"
+        ? "AND (pck.PACKAGE_FEE - NVL(pay.Total_Fees,0)) > 0"
+        : ""}
       ORDER BY s.STUDENT_NAME
       `,
       { month }
     );
 
-
-      // 2️ Compute summary totals
+    /* ===============================
+       SUMMARY (MATCH FILTER)
+       =============================== */
     const summaryResult = await conn.execute(
       `
       SELECT 
@@ -46,10 +52,12 @@ exports.financialReport = async (req, res) => {
       JOIN PACKAGE pck ON e.PACKAGE_ID = pck.PACKAGE_ID
       LEFT JOIN PAYMENT pay ON e.PAYMENT_ID = pay.PAYMENT_ID
       WHERE TO_CHAR(e.ENROLL_DATE,'YYYY-MM') = :month
+      ${outstandingOnly === "true"
+        ? "AND (pck.PACKAGE_FEE - NVL(pay.Total_Fees,0)) > 0"
+        : ""}
       `,
       { month }
     );
-
 
     res.json({
       summary: summaryResult.rows[0] || {
@@ -63,7 +71,9 @@ exports.financialReport = async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to generate financial report" });
+    res.status(500).json({
+      error: "Failed to generate financial report"
+    });
   } finally {
     if (conn) await conn.close();
   }
